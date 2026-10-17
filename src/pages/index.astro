@@ -1,7 +1,6 @@
 ---
 import Layout from "../layouts/layout.astro";
 import NavBar from "../components/navbar.astro";
-import cnames from "../data/cclist.json";
 import styles from "./index.module.css";
 ---
 
@@ -9,15 +8,14 @@ import styles from "./index.module.css";
   <div>
     <NavBar />
     <div class={styles.des}>
-      <h3 class={styles.words}><br />Insert Description<br /><br /></h3>
-    </div>
-    <div class={styles.combList}>
-      <div class={`${styles.list} ${styles.words}`}>
-        <h2>Counties</h2>
-      </div>
-      <div class={`${styles.list} ${styles.words}`}>
-        <h2>Cities</h2>
-      </div>
+      <h3 class={styles.words}>
+        The Former Schools of Virginia website contains information about
+        schools that have been closed here in Virginia. Each page will contain
+        information about the school, the address (if available), images (if
+        available), and the sources the information came from. If you have any
+        extra information about a school, please use the form in the NavBar to
+        report it.
+      </h3>
     </div>
   </div>
 </Layout>
