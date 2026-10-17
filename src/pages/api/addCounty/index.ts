@@ -65,7 +65,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(
       JSON.stringify({ message: "County added successfully" }),
       {
-        status: 200,
+        status: 201,
         headers: {
           "Content-Type": "application/json",
         },
