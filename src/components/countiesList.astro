@@ -1,0 +1,206 @@
+---
+interface Props {
+  width?: string;
+  allowDelete?: boolean;
+  refreshEvent?: string;
+}
+
+const {
+  width = "100%",
+  allowDelete = false,
+  refreshEvent = "refresh-counties",
+} = Astro.props;
+---
+
+<section
+  class="countiesList"
+  style={`--counties-list-width: ${width}`}
+  data-refresh-event={refreshEvent}
+  data-allow-delete={allowDelete}
+  aria-labelledby="counties-list-heading"
+>
+  <div class="countiesListHeader">
+    <h2 id="counties-list-heading">Counties</h2>
+  </div>
+  <div class="countiesListContent" aria-live="polite" aria-busy="true">
+    <p class="countiesListMessage">Loading counties...</p>
+  </div>
+</section>
+
+<style>
+  .countiesList {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: var(--counties-list-width);
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .countiesListHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex: 0 0 auto;
+    padding: 20px;
+    background-color: #404e3b;
+    color: #bac8b1;
+  }
+
+  .countiesListHeader h2 {
+    margin: 0;
+    font-size: 2em;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .countiesListContent {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  :global(.countiesListItem) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background-color: #7b9669;
+    color: #353839;
+    border-radius: 4px;
+    font-size: 18px;
+  }
+
+  :global(.countiesListItem + .countiesListItem) {
+    margin-top: 8px;
+  }
+
+  :global(.deleteCountyButton) {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 0;
+    background-color: #7b9669;
+    border: none;
+    color: #353839;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    transition: transform 125ms ease-in-out;
+  }
+
+  :global(.deleteCountyButton:hover) {
+    transform: scale(1.67);
+  }
+
+  :global(.deleteCountyButton:disabled) {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  :global(.countiesListMessage) {
+    margin: 12px;
+    color: #bac8b1;
+    text-align: center;
+  }
+</style>
+
+<script>
+  type County = { id: number; name: string; schoolCount: number };
+
+  const lists = document.querySelectorAll<HTMLElement>(".countiesList");
+
+  lists.forEach((list) => {
+    const content = list.querySelector<HTMLElement>(".countiesListContent");
+    const refreshEvent = list.dataset.refreshEvent;
+    const allowDelete = list.dataset.allowDelete === "true";
+
+    if (!content) return;
+
+    const renderCounties = (counties: County[]) => {
+      content.replaceChildren();
+
+      if (counties.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "countiesListMessage";
+        emptyMessage.textContent = "0 counties found";
+        content.append(emptyMessage);
+        return;
+      }
+
+      counties.forEach((county) => {
+        const countyItem = document.createElement("div");
+        countyItem.className = "countiesListItem";
+
+        const countyLabel = document.createElement("span");
+        countyLabel.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
+
+        countyItem.append(countyLabel);
+
+        if (allowDelete) {
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "deleteCountyButton";
+          deleteButton.type = "button";
+          deleteButton.setAttribute(
+            "aria-label",
+            `Delete ${county.name} County`,
+          );
+          deleteButton.title = `Delete ${county.name} County`;
+          deleteButton.textContent = "×";
+          deleteButton.addEventListener("click", async () => {
+            deleteButton.disabled = true;
+
+            try {
+              const response = await fetch(
+                `/api/deleteCounty?id=${county.id}`,
+                {
+                  method: "DELETE",
+                },
+              );
+
+              if (!response.ok) throw new Error("Unable to delete county.");
+              await fetchCounties();
+            } catch {
+              deleteButton.disabled = false;
+            }
+          });
+
+          countyItem.append(deleteButton);
+        }
+
+        content.append(countyItem);
+      });
+    };
+
+    const fetchCounties = async () => {
+      content.setAttribute("aria-busy", "true");
+
+      try {
+        const response = await fetch("/api/getCounties");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Unable to load counties.");
+        }
+
+        renderCounties(result.cleanedCounties);
+      } catch {
+        content.replaceChildren();
+        const errorMessage = document.createElement("p");
+        errorMessage.className = "countiesListMessage";
+        errorMessage.textContent = "Unable to load counties. Please try again.";
+        content.append(errorMessage);
+      } finally {
+        content.setAttribute("aria-busy", "false");
+      }
+    };
+
+    if (refreshEvent) {
+      document.addEventListener(refreshEvent, fetchCounties);
+    }
+
+    fetchCounties();
+  });
+</script>
