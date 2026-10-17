@@ -3,10 +3,26 @@ import Layout from "../../../layouts/layout.astro";
 import styles from "./signup.module.css";
 ---
 
-<Layout>
+<Layout client:load>
   <div class={styles.container}>
-    <div class={styles.formContainer}>
+    <form class={styles.formContainer} id="signup-form">
       <h1>Sign Up</h1>
-    </div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required />
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+      <button type="submit">Sign Up</button>
+    </form>
   </div>
+
+  <script>
+    const form = document.getElementById("signup-form") as HTMLFormElement;
+
+    form?.addEventListener("submit", async (event: SubmitEvent) => {
+      event.preventDefault();
+
+      const data = new FormData(event.target as HTMLFormElement);
+      console.log("Form data:", Object.fromEntries(data.entries()));
+    });
+  </script>
 </Layout>
