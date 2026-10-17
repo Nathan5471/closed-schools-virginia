@@ -1,37 +1,23 @@
 ---
 import Layout from "../layouts/layout.astro";
-import NavBar from "../components/navbar.astro"
-import cnames from "../data/cclist.json"
+import NavBar from "../components/navbar.astro";
+import cnames from "../data/cclist.json";
+import styles from "./index.module.css";
 ---
 
 <Layout>
   <div>
-    <NavBar/>
-    <div class="des">
-      <h3 class="words"><br/>Insert Description<br/><br/></h3>
+    <NavBar />
+    <div class={styles.des}>
+      <h3 class={styles.words}><br />Insert Description<br /><br /></h3>
     </div>
-    <div class="comb-list">
-      <div class="list words">
+    <div class={styles.combList}>
+      <div class={`${styles.list} ${styles.words}`}>
         <h2>Counties</h2>
       </div>
-      <div class="list words">
+      <div class={`${styles.list} ${styles.words}`}>
         <h2>Cities</h2>
       </div>
     </div>
   </div>
 </Layout>
-
-<style>
-  .des {
-    background-color: #404E38;
-    color: #E6E6E6;
-    transform: translateY(-3rem);
-  }
-  .words {
-    margin-left: 2rem;
-  }
-  .comb-list {
-    display: flex;
-    flex-direction: horizontal;
-  }
-</style>

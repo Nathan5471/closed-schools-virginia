@@ -1,0 +1,18 @@
+.des {
+  background-color: #404e38;
+  color: #e6e6e6;
+  transform: translateY(-3rem);
+}
+
+.words {
+  margin-left: 2rem;
+}
+
+.combList {
+  display: flex;
+  flex-direction: row;
+}
+
+.list {
+  flex: 1;
+}

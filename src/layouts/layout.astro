@@ -1,3 +1,7 @@
+---
+import styles from "./layout.module.css";
+---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -10,20 +14,7 @@
     />
     <title>Forgotten Schools of Virginia</title>
   </head>
-  <body>
+  <body class={styles.page}>
     <slot />
   </body>
 </html>
-
-<style is:global>
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #e6e6e6;
-    font-family: "Oxygen", sans-serif;
-    font-weight: 400;
-    font-style: normal;
-  }
-</style>

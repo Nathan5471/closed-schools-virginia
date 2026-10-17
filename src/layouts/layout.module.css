@@ -1,0 +1,16 @@
+:global(html) {
+  box-sizing: border-box;
+}
+
+:global(body) {
+  margin: 0;
+  padding: 0;
+  background-color: #e6e6e6;
+  font-family: "Oxygen", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.page {
+  box-sizing: border-box;
+}

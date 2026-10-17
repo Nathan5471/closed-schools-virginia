@@ -1,22 +1,12 @@
 ---
-import AdminNavBar from "../../components/adminnavbar.astro"
+import AdminNavBar from "../../components/adminnavbar.astro";
 import Layout from "../../layouts/layout.astro";
+import styles from "./index.module.css";
 ---
 
 <Layout>
-    <AdminNavBar/>
-    <div class="des">
-      <h3 class="words"><br/>Insert Description<br/><br/></h3>
-    </div>
+  <AdminNavBar />
+  <div class={styles.des}>
+    <h3 class={styles.words}><br />Insert Description<br /><br /></h3>
+  </div>
 </Layout>
-
-<style>
-  .des {
-    background-color: #404E38;
-    color: #E6E6E6;
-    transform: translateY(-3rem);
-  }
-  .words {
-    margin-left: 2rem;
-  }
-</style>
