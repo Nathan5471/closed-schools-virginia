@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { db } from "../../../db";
 import { usersTable } from "../../../db/schema";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import generateToken from "../../../utils/generateToken";
 
@@ -12,6 +13,22 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       JSON.stringify({ message: "Username and password are required" }),
       {
         status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+  const existingUser = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.username, data.username))
+    .execute();
+  if (existingUser.length > 0) {
+    return new Response(
+      JSON.stringify({ message: "Username already exists" }),
+      {
+        status: 409,
         headers: {
           "Content-Type": "application/json",
         },
