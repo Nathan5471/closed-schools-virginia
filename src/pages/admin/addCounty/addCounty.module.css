@@ -1,29 +1,66 @@
 .container {
   box-sizing: border-box;
   display: flex;
-  min-height: calc(100vh - 100px);
+  height: calc(100vh - 120px);
   width: 100%;
   gap: 24px;
   padding: 24px;
 }
 
-.emptyPanel,
+.countiesPanel,
 .formPanel {
   box-sizing: border-box;
   width: 50%;
-  min-height: 420px;
   border-radius: 8px;
 }
 
-.emptyPanel {
+.countiesPanel {
+  display: flex;
+  flex-direction: column;
+  background-color: #404e3b;
   border: 2px solid #bac8b1;
+  overflow: hidden;
+}
+
+.countiesPanel h1 {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 20px;
+  background-color: #404e3b;
+  color: #bac8b1;
+  text-align: center;
+  font-weight: 700;
+}
+
+.countyList {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+:global(.countyItem) {
+  padding: 14px 16px;
+  background-color: #7b9669;
+  color: #353839;
+  border-radius: 4px;
+  font-size: 18px;
+}
+
+:global(.countyItem + .countyItem) {
+  margin-top: 8px;
+}
+
+:global(.listMessage) {
+  margin: 12px;
+  color: #bac8b1;
+  text-align: center;
 }
 
 .formPanel {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #bac8b1;
 }
 
 .formContainer {
@@ -85,7 +122,7 @@
     flex-direction: column;
   }
 
-  .emptyPanel,
+  .countiesPanel,
   .formPanel {
     width: 100%;
     min-height: 260px;

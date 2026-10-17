@@ -6,8 +6,18 @@ import styles from "./addCounty.module.css";
 
 <Layout>
   <AdminNavBar />
-  <main class={styles.container}>
-    <div class={styles.emptyPanel} aria-hidden="true"></div>
+  <div class={styles.container}>
+    <section class={styles.countiesPanel} aria-labelledby="counties-heading">
+      <h1 id="counties-heading">Counties</h1>
+      <div
+        class={styles.countyList}
+        id="county-list"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <p class={styles.listMessage}>Loading counties...</p>
+      </div>
+    </section>
     <div class={styles.formPanel}>
       <form class={styles.formContainer} id="add-county-form">
         <h1>Add County</h1>
@@ -23,15 +33,60 @@ import styles from "./addCounty.module.css";
         </p>
       </form>
     </div>
-  </main>
+  </div>
 </Layout>
 
 <script>
+  const countyList = document.getElementById("county-list") as HTMLDivElement;
   const form = document.getElementById("add-county-form") as HTMLFormElement;
   const message = document.getElementById(
     "add-county-message",
   ) as HTMLParagraphElement;
   const countyName = document.getElementById("county-name") as HTMLInputElement;
+
+  const renderCounties = (
+    counties: Array<{ name: string; schoolCount: number }>,
+  ) => {
+    countyList.replaceChildren();
+
+    if (counties.length === 0) {
+      const emptyMessage = document.createElement("p");
+      emptyMessage.className = "listMessage";
+      emptyMessage.textContent = "No counties have been added yet.";
+      countyList.append(emptyMessage);
+      return;
+    }
+
+    counties.forEach((county) => {
+      const countyItem = document.createElement("div");
+      countyItem.className = "countyItem";
+      countyItem.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
+      countyList.append(countyItem);
+    });
+  };
+
+  const fetchCounties = async () => {
+    countyList.setAttribute("aria-busy", "true");
+
+    try {
+      const response = await fetch("/api/getCounties");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to load counties.");
+      }
+
+      renderCounties(result.cleanedCounties);
+    } catch {
+      countyList.replaceChildren();
+      const errorMessage = document.createElement("p");
+      errorMessage.className = "listMessage";
+      errorMessage.textContent = "Unable to load counties. Please try again.";
+      countyList.append(errorMessage);
+    } finally {
+      countyList.setAttribute("aria-busy", "false");
+    }
+  };
 
   form?.addEventListener("submit", async (event: SubmitEvent) => {
     event.preventDefault();
@@ -53,9 +108,12 @@ import styles from "./addCounty.module.css";
         return;
       }
 
-      window.location.assign("/admin");
+      countyName.value = "";
+      await fetchCounties();
     } catch {
       message.textContent = "Unable to add county right now. Please try again.";
     }
   });
+
+  fetchCounties();
 </script>
