@@ -1,0 +1,9 @@
+---
+function getList(list: string[]) {
+  const newlist = []
+  for (const item in list) {
+    newlist.push(<a href={`/${item}`} target="_blank" rel="noopener noreferrer">{item}</a>)
+  }
+  return newlist
+}
+---
