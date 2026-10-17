@@ -1,11 +1,14 @@
 import "dotenv/config";
 import type { MiddlewareHandler } from "astro";
 import jwt from "jsonwebtoken";
+import { db } from "./db";
+import { usersTable } from "./db/schema";
+import { eq } from "drizzle-orm";
 
 const publicAdminRoutes = new Set(["/admin/login", "/admin/signup"]);
 
 export const onRequest: MiddlewareHandler = async (
-  { cookies, url, redirect },
+  { cookies, url, locals, redirect },
   next,
 ) => {
   const normalizedPath = url.pathname.replace(/\/+$/, "") || "/";
@@ -24,8 +27,20 @@ export const onRequest: MiddlewareHandler = async (
   }
 
   try {
-    jwt.verify(token, jwtSecret);
+    const decoded = jwt.verify(token, jwtSecret);
+    const userId = parseInt((decoded as { id: string }).id);
+    const user = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .execute();
+    if (user.length === 0) {
+      cookies.delete("token", { path: "/" });
+      return redirect("/admin/login");
+    }
+    locals.user = { id: user[0].id, username: user[0].username };
   } catch {
+    cookies.delete("token", { path: "/" });
     return redirect("/admin/login");
   }
 
