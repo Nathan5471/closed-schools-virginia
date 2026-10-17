@@ -1,6 +1,6 @@
 .home {
     width: 45%;
-    color: darkblue;
+    color: #404E38;
     margin-left: 5%;
     font-size: xx-large;
     font-weight: bolder;
@@ -8,7 +8,7 @@
 }
 .small {
     width: 10%;
-    color: darkblue;
+    color: #404E38;
     margin-left: 5%;
     font-size: large;
     font-weight: bold;
