@@ -4,8 +4,8 @@ import { usersTable, countiesTable } from "../../../db/schema";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 
-export const DELETE: APIRoute = async ({ params, cookies }) => {
-  const countyId = params.id;
+export const DELETE: APIRoute = async ({ url, cookies }) => {
+  const countyId = url.searchParams.get("id");
   if (!countyId) {
     return new Response(JSON.stringify({ message: "County id is required" }), {
       status: 400,
@@ -47,7 +47,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       .from(countiesTable)
       .where(eq(countiesTable.id, parseInt(countyId)))
       .execute();
-    if (county.length < 0) {
+    if (county.length === 0) {
       return new Response(JSON.stringify({ message: "County not found" }), {
         status: 404,
         headers: {

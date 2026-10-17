@@ -45,14 +45,14 @@ import styles from "./addCounty.module.css";
   const countyName = document.getElementById("county-name") as HTMLInputElement;
 
   const renderCounties = (
-    counties: Array<{ name: string; schoolCount: number }>,
+    counties: Array<{ id: number; name: string; schoolCount: number }>,
   ) => {
     countyList.replaceChildren();
 
     if (counties.length === 0) {
       const emptyMessage = document.createElement("p");
       emptyMessage.className = "listMessage";
-      emptyMessage.textContent = "No counties have been added yet.";
+      emptyMessage.textContent = "0 counties found";
       countyList.append(emptyMessage);
       return;
     }
@@ -60,7 +60,35 @@ import styles from "./addCounty.module.css";
     counties.forEach((county) => {
       const countyItem = document.createElement("div");
       countyItem.className = "countyItem";
-      countyItem.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
+
+      const countyLabel = document.createElement("span");
+      countyLabel.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
+
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "deleteCountyButton";
+      deleteButton.type = "button";
+      deleteButton.setAttribute("aria-label", `Delete ${county.name} County`);
+      deleteButton.title = `Delete ${county.name} County`;
+      deleteButton.textContent = "×";
+      deleteButton.addEventListener("click", async () => {
+        deleteButton.disabled = true;
+
+        try {
+          const response = await fetch(`/api/deleteCounty?id=${county.id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error("Unable to delete county.");
+          }
+
+          await fetchCounties();
+        } catch {
+          deleteButton.disabled = false;
+        }
+      });
+
+      countyItem.append(countyLabel, deleteButton);
       countyList.append(countyItem);
     });
   };
