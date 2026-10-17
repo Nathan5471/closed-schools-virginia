@@ -1,0 +1,15 @@
+.home {
+    width: 45%;
+    color: darkblue;
+    margin-left: 5%;
+    font-size: xx-large;
+    font-weight: bolder;
+    font-style: italic;
+}
+.small {
+    width: 10%;
+    color: darkblue;
+    margin-left: 5%;
+    font-size: large;
+    font-weight: bold;
+}
