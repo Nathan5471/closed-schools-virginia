@@ -12,17 +12,52 @@ import styles from "./signup.module.css";
       <label for="password">Password:</label>
       <input type="password" id="password" name="password" required />
       <button type="submit">Sign Up</button>
+      <p
+        class={styles.message}
+        id="signup-message"
+        role="alert"
+        aria-live="polite"
+      >
+      </p>
     </form>
   </div>
 
   <script>
     const form = document.getElementById("signup-form") as HTMLFormElement;
+    const message = document.getElementById(
+      "signup-message",
+    ) as HTMLParagraphElement;
 
     form?.addEventListener("submit", async (event: SubmitEvent) => {
       event.preventDefault();
+      message.textContent = "";
 
-      const data = new FormData(event.target as HTMLFormElement);
-      console.log("Form data:", Object.fromEntries(data.entries()));
+      const username = (document.getElementById("username") as HTMLInputElement)
+        .value;
+      const password = (document.getElementById("password") as HTMLInputElement)
+        .value;
+      const data = JSON.stringify({ username, password });
+
+      try {
+        const response = await fetch("/api/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: data,
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          message.textContent =
+            result.message || "Sign up failed. Please try again.";
+          return;
+        }
+
+        window.location.assign("/admin");
+      } catch {
+        message.textContent = "Unable to sign up right now. Please try again.";
+      }
     });
   </script>
 </Layout>
