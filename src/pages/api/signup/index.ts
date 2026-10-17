@@ -52,6 +52,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     secure: true,
     sameSite: "strict",
     maxAge: 60 * 60 * 24 * 365 * 2, // 2 years
+    path: "/",
   });
 
   return new Response(JSON.stringify({ message: "Signup successful" }), {
