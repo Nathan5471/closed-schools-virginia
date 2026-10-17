@@ -1,0 +1,62 @@
+---
+import Layout from "../../../layouts/layout.astro";
+import styles from "./login.module.css";
+---
+
+<Layout client:load>
+  <div class={styles.container}>
+    <form class={styles.formContainer} id="login-form">
+      <h1>Log In</h1>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required />
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+      <button type="submit">Log In</button>
+      <p
+        class={styles.message}
+        id="login-message"
+        role="alert"
+        aria-live="polite"
+      >
+      </p>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("login-form") as HTMLFormElement;
+    const message = document.getElementById(
+      "login-message",
+    ) as HTMLParagraphElement;
+
+    form?.addEventListener("submit", async (event: SubmitEvent) => {
+      event.preventDefault();
+      message.textContent = "";
+
+      const username = (document.getElementById("username") as HTMLInputElement)
+        .value;
+      const password = (document.getElementById("password") as HTMLInputElement)
+        .value;
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          message.textContent =
+            result.message || "Log in failed. Please try again.";
+          return;
+        }
+
+        window.location.assign("/admin");
+      } catch {
+        message.textContent = "Unable to log in right now. Please try again.";
+      }
+    });
+  </script>
+</Layout>
