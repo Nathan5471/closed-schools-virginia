@@ -1,39 +1,50 @@
 .container {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
   background-color: transparent;
-  height: 100px;
+  height: 120px;
   width: 100%;
+  padding: 8px;
 }
 
 .button {
+  flex-shrink: 0;
   height: 50px;
   background-color: transparent;
   border: transparent;
   border-radius: 25px;
-  transition: background-color 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
+  white-space: nowrap;
+  transition:
+    background-color 0.5s ease,
+    transform 0.5s ease,
+    box-shadow 0.5s ease;
 }
 
 .button:hover {
   cursor: pointer;
 }
 
+.startNavButtons {
+  margin-left: auto;
+}
+
 .small {
-  width: 10%;
+  width: auto;
   color: #404e38;
-  margin-left: 1%;
+  margin-left: 4px;
   font-size: x-large;
   font-weight: bold;
+  padding: 4px 8px;
 }
 
 .small:hover {
   background-color: #bac8b1;
-  transform: translateY(5px);
   box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.2);
 }
 
 .home {
-  width: 45%;
   color: #404e38;
-  margin-right: 15%;
   font-size: xx-large;
   font-weight: bolder;
   font-style: italic;

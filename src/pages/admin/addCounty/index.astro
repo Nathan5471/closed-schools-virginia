@@ -6,7 +6,56 @@ import styles from "./addCounty.module.css";
 
 <Layout>
   <AdminNavBar />
-  <div class={styles.des}>
-    <h3 class={styles.words}><br />Insert Description<br /><br /></h3>
-  </div>
+  <main class={styles.container}>
+    <div class={styles.emptyPanel} aria-hidden="true"></div>
+    <div class={styles.formPanel}>
+      <form class={styles.formContainer} id="add-county-form">
+        <h1>Add County</h1>
+        <label for="county-name">County name:</label>
+        <input type="text" id="county-name" name="name" required />
+        <button type="submit">Add County</button>
+        <p
+          class={styles.message}
+          id="add-county-message"
+          role="alert"
+          aria-live="polite"
+        >
+        </p>
+      </form>
+    </div>
+  </main>
 </Layout>
+
+<script>
+  const form = document.getElementById("add-county-form") as HTMLFormElement;
+  const message = document.getElementById(
+    "add-county-message",
+  ) as HTMLParagraphElement;
+  const countyName = document.getElementById("county-name") as HTMLInputElement;
+
+  form?.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    message.textContent = "";
+
+    try {
+      const response = await fetch("/api/addCounty", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: countyName.value }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        message.textContent =
+          result.message || "Unable to add county. Please try again.";
+        return;
+      }
+
+      window.location.assign("/admin");
+    } catch {
+      message.textContent = "Unable to add county right now. Please try again.";
+    }
+  });
+</script>
