@@ -78,7 +78,10 @@ export const POST: APIRoute = async ({ request }) => {
 
   const uploadName =
     typeof requestedName === "string"
-      ? requestedName.trim().replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80)
+      ? requestedName
+          .trim()
+          .replace(/[^a-z0-9_-]+/gi, "-")
+          .slice(0, 80)
       : "";
   const filename = `${uploadName ? `source-${uploadName}` : "user-upload"}-${Date.now()}-${Math.random()
     .toString(36)
