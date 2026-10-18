@@ -1,0 +1,73 @@
+---
+import { eq } from "drizzle-orm";
+import AdminNavBar from "../../../../components/adminnavbar.astro";
+import Layout from "../../../../layouts/layout.astro";
+import { db } from "../../../../db";
+import { countiesTable, schoolsTable } from "../../../../db/schema";
+import styles from "../school.module.css";
+
+// @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+const id = Number(Astro.params.id);
+const [school] = Number.isInteger(id)
+  ? await db
+      .select({
+        schoolName: schoolsTable.schoolName,
+        schoolType: schoolsTable.schoolType,
+        status: schoolsTable.status,
+        closedYear: schoolsTable.closedYear,
+        address: schoolsTable.address,
+        countyName: countiesTable.name,
+      })
+      .from(schoolsTable)
+      .innerJoin(countiesTable, eq(schoolsTable.countyId, countiesTable.id))
+      .where(eq(schoolsTable.id, id))
+      .execute()
+  : [];
+
+if (!school) {
+  // @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+  return Astro.redirect("/admin", 302);
+}
+
+const formatValue = (value: string | null | number) => value ?? "Not provided";
+const formatLabel = (value: string | null) =>
+  value
+    ? value.replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "Not provided";
+---
+
+<Layout>
+  <AdminNavBar />
+
+  <main class={styles.page}>
+    <article class={styles.panel}>
+      <a class={styles.backLink} href="/admin">&larr; Back to schools</a>
+      <header class={styles.schoolHeader}>
+        <h1>{school.schoolName}</h1>
+        <p class={styles.county}>{school.countyName}</p>
+      </header>
+
+      <section class={styles.infoSection} aria-labelledby="school-information">
+        <h2 id="school-information">School information</h2>
+        <dl class={styles.details}>
+          <div>
+            <dt>School type</dt>
+            <dd>{formatLabel(school.schoolType)}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{formatLabel(school.status)}</dd>
+          </div>
+          <div>
+            <dt>Closed year</dt>
+            <dd>{formatValue(school.closedYear)}</dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>{formatValue(school.address)}</dd>
+          </div>
+        </dl>
+      </section>
+    </article>
+  </main>
+</Layout>

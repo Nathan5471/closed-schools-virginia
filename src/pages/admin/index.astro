@@ -1,9 +1,153 @@
 ---
 import AdminNavBar from "../../components/adminnavbar.astro";
 import Layout from "../../layouts/layout.astro";
+import { db } from "../../db";
 import styles from "./index.module.css";
+
+const schools = await db.query.schoolsTable.findMany({
+  columns: {
+    id: true,
+    schoolName: true,
+    schoolType: true,
+    status: true,
+    closedYear: true,
+    address: true,
+  },
+  with: {
+    county: {
+      columns: {
+        name: true,
+      },
+    },
+  },
+});
 ---
 
 <Layout>
   <AdminNavBar />
+
+  <main class={styles.page} data-schools={JSON.stringify(schools)}>
+    <section class={styles.panel}>
+      <div class={styles.controls}>
+        <label class={styles.searchField} for="school-search">
+          Search schools
+          <input id="school-search" type="search" />
+        </label>
+
+        <label for="sort-field">
+          Sort by
+          <select id="sort-field">
+            <option value="name">School name</option>
+            <option value="county">County</option>
+          </select>
+        </label>
+
+        <label for="sort-order">
+          Order
+          <select id="sort-order">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </label>
+      </div>
+
+      <div class={styles.resultsHeading}>
+        <h2>Schools</h2>
+        <span id="school-count">0 schools</span>
+      </div>
+
+      <div class={styles.schoolList} id="school-list" aria-live="polite"></div>
+      <p class={styles.emptyState} id="empty-state" hidden>
+        No schools match your search.
+      </p>
+    </section>
+  </main>
+
+  <template id="school-template">
+    <article class={styles.schoolCard}>
+      <div>
+        <h3 data-school-name></h3>
+        <p data-school-location></p>
+      </div>
+      <a class={styles.schoolLink} data-school-link>View School</a>
+    </article>
+  </template>
 </Layout>
+
+<script>
+  type School = {
+    id: number;
+    schoolName: string;
+    schoolType: "white" | "colored" | "mixed" | null;
+    status: "standing" | "repurposed" | "not standing" | null;
+    closedYear: number | null;
+    address: string | null;
+    county: { name: string };
+  };
+
+  const schoolData = document.querySelector<HTMLElement>("[data-schools]");
+  const allSchools = JSON.parse(
+    schoolData?.dataset.schools || "[]",
+  ) as School[];
+  const template =
+    document.querySelector<HTMLTemplateElement>("#school-template");
+  const list = document.getElementById("school-list");
+  const emptyState = document.getElementById("empty-state");
+  const count = document.getElementById("school-count");
+  const search = document.getElementById("school-search") as HTMLInputElement;
+  const sortField = document.getElementById("sort-field") as HTMLSelectElement;
+  const sortOrder = document.getElementById("sort-order") as HTMLSelectElement;
+
+  const renderSchools = () => {
+    if (!template || !list) return;
+
+    const query = search.value.trim().toLowerCase();
+    const direction = sortOrder.value === "desc" ? -1 : 1;
+    const filteredSchools = allSchools
+      .filter((school) => {
+        const searchableText = [
+          school.schoolName,
+          school.county.name,
+          school.address ?? "",
+        ]
+          .join(" ")
+          .toLowerCase();
+        return searchableText.includes(query);
+      })
+      .sort((first, second) => {
+        const firstValue =
+          sortField.value === "county" ? first.county.name : first.schoolName;
+        const secondValue =
+          sortField.value === "county" ? second.county.name : second.schoolName;
+        return firstValue.localeCompare(secondValue) * direction;
+      });
+
+    list.replaceChildren();
+    if (count) {
+      count.textContent = `${filteredSchools.length} ${filteredSchools.length === 1 ? "school" : "schools"}`;
+    }
+    if (emptyState) emptyState.hidden = filteredSchools.length > 0;
+
+    filteredSchools.forEach((school) => {
+      const card = template.content.cloneNode(true) as DocumentFragment;
+      const name = card.querySelector<HTMLElement>("[data-school-name]");
+      const location = card.querySelector<HTMLElement>(
+        "[data-school-location]",
+      );
+      const schoolLink =
+        card.querySelector<HTMLAnchorElement>("[data-school-link]");
+
+      if (name) name.textContent = school.schoolName;
+      if (location) {
+        location.textContent = school.county.name;
+      }
+      if (schoolLink) schoolLink.href = `/admin/schools/${school.id}`;
+      list.append(card);
+    });
+  };
+
+  search.addEventListener("input", renderSchools);
+  sortField.addEventListener("change", renderSchools);
+  sortOrder.addEventListener("change", renderSchools);
+  renderSchools();
+</script>
