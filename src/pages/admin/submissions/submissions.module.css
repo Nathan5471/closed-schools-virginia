@@ -13,7 +13,6 @@
   padding: 28px 24px 24px;
   border-radius: 12px;
   background-color: #404e3b;
-  box-shadow: 0 10px 22px rgb(36 48 35 / 18%);
 }
 
 .header {
@@ -83,11 +82,10 @@
   justify-content: space-between;
   gap: 24px;
   min-height: 82px;
-  padding: 18px 20px;
-  border: 1px solid #d9e1d3;
+  padding: 14px 16px;
+  border: 0;
   border-radius: 10px;
   background: #7b9669;
-  box-shadow: 0 3px 10px rgb(64 78 56 / 7%);
 }
 
 .cardContent {
@@ -96,49 +94,26 @@
 
 .submissionTitle,
 .submissionMeta,
-.status,
 .message {
   margin: 0;
 }
 
 .submissionTitle {
   color: #273226;
-  font-size: 1.08rem;
+  font-size: 1.16rem;
   font-weight: 700;
 }
 
 .submissionMeta {
   margin-top: 5px;
   color: #eef3eb;
-  font-size: 0.95rem;
-}
-
-.status {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: #edf0eb;
-  color: #52634b;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.status[data-status="approved"] {
-  background: #d8f0e3;
-  color: #236142;
-}
-
-.status[data-status="rejected"] {
-  background: #f6dddd;
-  color: #8a3535;
+  font-size: 1rem;
 }
 
 .viewLink {
   flex-shrink: 0;
   padding: 9px 13px;
-  border: 1px solid #aebca5;
+  border: 0;
   border-radius: 7px;
   background: #bac8b1;
   color: #404e38;
@@ -148,7 +123,6 @@
 
 .viewLink:hover,
 .viewLink:focus-visible {
-  border-color: #404e38;
   background: #d4dfcb;
   color: #1e6b4b;
 }

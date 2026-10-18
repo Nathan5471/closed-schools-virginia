@@ -78,9 +78,7 @@ import styles from "./submit.module.css";
 
       <fieldset class={styles.uploadSection}>
         <legend>Supporting files</legend>
-        <p class={styles.helperText}>
-          Files must be 15 MB or smaller.
-        </p>
+        <p class={styles.helperText}>Files must be 15 MB or smaller.</p>
         <label class={styles.filePicker} for="attachments">
           <span class={styles.filePickerTitle}>Choose files</span>
           <input
@@ -342,6 +340,7 @@ import styles from "./submit.module.css";
       renderUploads();
       message.textContent =
         "Thank you. Your information has been sent for review.";
+      window.location.assign("/");
     } catch (error) {
       message.textContent =
         error instanceof Error

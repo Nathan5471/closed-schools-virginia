@@ -12,7 +12,10 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
       <section class={styles.section} aria-labelledby="unreviewed-heading">
         <div class={styles.sectionHeading}>
           <h2 id="unreviewed-heading">
-            Unreviewed Submissions (<span class={styles.count} data-count="unreviewed">0</span>)
+            Unreviewed Submissions (<span
+              class={styles.count}
+              data-count="unreviewed">0</span
+            >)
           </h2>
         </div>
         <div class={styles.submissionList} data-list="unreviewed">
@@ -23,7 +26,10 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
       <section class={styles.section} aria-labelledby="reviewed-heading">
         <div class={styles.sectionHeading}>
           <h2 id="reviewed-heading">
-            Reviewed Submissions (<span class={styles.count} data-count="reviewed">0</span>)
+            Reviewed Submissions (<span
+              class={styles.count}
+              data-count="reviewed">0</span
+            >)
           </h2>
         </div>
         <div class={styles.submissionList} data-list="reviewed">
@@ -42,11 +48,8 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
       <div class={styles.cardContent}>
         <p class={styles.submissionTitle} data-title></p>
         <p class={styles.submissionMeta} data-meta></p>
-        <p class={styles.status} data-status hidden></p>
       </div>
-      <a class={styles.viewLink} data-view-link
-        >View Submission <span aria-hidden="true">&rarr;</span></a
-      >
+      <a class={styles.viewLink} data-view-link>View Submission</a>
     </article>
   </template>
 </Layout>
@@ -71,20 +74,17 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
     const card = template.content.cloneNode(true) as DocumentFragment;
     const title = card.querySelector<HTMLElement>("[data-title]");
     const meta = card.querySelector<HTMLElement>("[data-meta]");
-    const status = card.querySelector<HTMLElement>("[data-status]");
     const viewLink = card.querySelector<HTMLAnchorElement>("[data-view-link]");
 
     if (title) {
-      title.textContent = `${submission.schoolName} (${submission.countyName})`;
+      const status =
+        submission.submissionStatus === "approved" ? "Approved" : "Rejected";
+      title.textContent = reviewed
+        ? `${submission.schoolName} (${submission.countyName}) - ${status}`
+        : `${submission.schoolName} (${submission.countyName})`;
     }
     if (meta) {
       meta.textContent = `Submitted by ${submission.submittedBy}`;
-    }
-    if (status && reviewed) {
-      status.hidden = false;
-      status.dataset.status = submission.submissionStatus;
-      status.textContent =
-        submission.submissionStatus === "approved" ? "Accepted" : "Rejected";
     }
     if (viewLink) {
       viewLink.href = `/admin/submissions/${submission.id}`;
