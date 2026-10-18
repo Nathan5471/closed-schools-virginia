@@ -18,6 +18,44 @@
   color: #bac8b1;
 }
 
+.countyControls {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 140px 140px;
+  gap: 8px;
+  width: 100%;
+  padding: 0 12px 12px;
+  box-sizing: border-box;
+}
+
+.countyControls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #dfead9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.countyControls input,
+.countyControls select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: #7b9669;
+  color: #253025;
+  font: inherit;
+}
+
+.countyControls input:focus,
+.countyControls select:focus {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .countiesListHeader h2 {
   margin: 0;
   font-size: 2em;
@@ -72,4 +110,14 @@
 .countiesListMessage {
   color: #bac8b1;
   text-align: center;
+}
+
+@media (max-width: 560px) {
+  .countyControls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .countyControls label:first-child {
+    grid-column: 1 / -1;
+  }
 }

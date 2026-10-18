@@ -28,6 +28,26 @@ const {
 >
   <div class={styles.countiesListHeader}>
     <h2 id="counties-list-heading">Counties</h2>
+    <div class={styles.countyControls}>
+      <label>
+        Search counties
+        <input type="search" data-county-search placeholder="Search counties" />
+      </label>
+      <label>
+        Sort by
+        <select data-county-sort>
+          <option value="name">County name</option>
+          <option value="schools">School count</option>
+        </select>
+      </label>
+      <label>
+        Order
+        <select data-county-order>
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </label>
+    </div>
   </div>
   <div class={styles.countiesListContent} aria-live="polite" aria-busy="true">
     <p class={styles.countiesListMessage}>Loading counties...</p>
@@ -50,9 +70,29 @@ const {
       : null;
     const refreshEvent = list.dataset.refreshEvent;
     const allowDelete = list.dataset.allowDelete === "true";
+    const search = list.querySelector<HTMLInputElement>("[data-county-search]");
+    const sortField =
+      list.querySelector<HTMLSelectElement>("[data-county-sort]");
+    const sortOrder = list.querySelector<HTMLSelectElement>(
+      "[data-county-order]",
+    );
+    let allCounties: County[] = [];
     if (!content || !itemClass || !messageClass || !deleteButtonClass) return;
 
-    const renderCounties = (counties: County[]) => {
+    const renderCounties = () => {
+      const query = search?.value.trim().toLowerCase() || "";
+      const direction = sortOrder?.value === "desc" ? -1 : 1;
+      const counties = allCounties
+        .filter((county) => county.name.toLowerCase().includes(query))
+        .sort((first, second) => {
+          const firstValue =
+            sortField?.value === "schools" ? first.schoolCount : first.name;
+          const secondValue =
+            sortField?.value === "schools" ? second.schoolCount : second.name;
+          return typeof firstValue === "number"
+            ? (firstValue - (secondValue as number)) * direction
+            : firstValue.localeCompare(secondValue as string) * direction;
+        });
       content.replaceChildren();
 
       if (counties.length === 0) {
@@ -118,7 +158,8 @@ const {
           throw new Error(result.message || "Unable to load counties.");
         }
 
-        renderCounties(result.cleanedCounties);
+        allCounties = result.cleanedCounties;
+        renderCounties();
       } catch {
         content.replaceChildren();
         const errorMessage = document.createElement("p");
@@ -133,6 +174,10 @@ const {
     if (refreshEvent) {
       document.addEventListener(refreshEvent, fetchCounties);
     }
+
+    search?.addEventListener("input", renderCounties);
+    sortField?.addEventListener("change", renderCounties);
+    sortOrder?.addEventListener("change", renderCounties);
 
     fetchCounties();
   });
