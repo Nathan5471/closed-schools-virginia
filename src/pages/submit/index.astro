@@ -45,7 +45,7 @@ import styles from "./submit.module.css";
         </div>
 
         <div class={styles.field}>
-          <label for="closed-year">Closed year:</label>
+          <label for="closed-year">Closed Year:</label>
           <input type="number" id="closed-year" name="closedYear" min="0" />
         </div>
 
@@ -55,18 +55,18 @@ import styles from "./submit.module.css";
         </div>
 
         <div class={`${styles.field} ${styles.fullWidth}`}>
-          <label for="additional-info">Additional information:</label>
+          <label for="additional-info">Additional Information:</label>
           <textarea id="additional-info" name="additionalInfo" rows="5"
           ></textarea>
         </div>
 
         <div class={styles.field}>
-          <label for="submitted-by">Your name:</label>
+          <label for="submitted-by">Your Name:</label>
           <input type="text" id="submitted-by" name="submittedBy" required />
         </div>
 
         <div class={styles.field}>
-          <label for="submitter-email">Your email:</label>
+          <label for="submitter-email">Your Email:</label>
           <input
             type="email"
             id="submitter-email"
@@ -79,12 +79,10 @@ import styles from "./submit.module.css";
       <fieldset class={styles.uploadSection}>
         <legend>Supporting files</legend>
         <p class={styles.helperText}>
-          Add photographs, documents, or other files that support your tip.
           Files must be 15 MB or smaller.
         </p>
         <label class={styles.filePicker} for="attachments">
           <span class={styles.filePickerTitle}>Choose files</span>
-          <span class={styles.filePickerHint}>Images, PDFs, and documents</span>
           <input
             type="file"
             id="attachments"
@@ -96,7 +94,7 @@ import styles from "./submit.module.css";
       </fieldset>
 
       <button class={styles.submitButton} type="submit" id="submit-button">
-        Send submission
+        Submit
       </button>
       <p
         class={styles.message}
