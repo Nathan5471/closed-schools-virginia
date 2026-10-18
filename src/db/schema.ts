@@ -49,6 +49,28 @@ export const schoolsTable = pgTable("schools", {
   address: varchar({ length: 255 }),
 });
 
+export const submissionStatusEnum = pgEnum("submissionStatus", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+
+export const submissionsTable = pgTable("submissions", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  schoolName: varchar({ length: 255 }).notNull(),
+  countyName: varchar({ length: 255 }).notNull(),
+  schoolType: schoolTypesEnum(),
+  schoolStatus: statusEnum(),
+  closedYear: integer(),
+  address: varchar({ length: 255 }),
+  additionalInfo: varchar({ length: 255 }),
+  attachmentedURLs: varchar({ length: 255 }).array(),
+  submittedBy: varchar({ length: 255 }).notNull(),
+  submitterEmail: varchar({ length: 255 }).notNull(),
+  submittedAt: integer().notNull(),
+  submissionStatus: submissionStatusEnum().notNull().default("pending"),
+});
+
 export const relations = defineRelations(
   { schoolsTable, countiesTable, imagesTable, usersTable },
   (relation) => ({
