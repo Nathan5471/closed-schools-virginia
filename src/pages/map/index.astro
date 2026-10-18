@@ -1,12 +1,25 @@
 ---
-import styles from "./map.module.css"
+import styles from "./map.module.css";
 import Layout from "../../layouts/layout.astro";
-import NavBar from "../../components/navbar.astro"
+import NavBar from "../../components/navbar.astro";
 ---
 
 <Layout>
-    <div>
-        <NavBar/>
-        <h1>Map</h1>
-    </div>
+  <NavBar />
+  <main class={styles.page}>
+    <section class={styles.panel}>
+      <h1>Work In Progress</h1>
+      <p>
+        We're still working on integrating a map into our website, please check
+        out this:{" "}
+        <a
+          href="https://earth.google.com/earth/d/1kFKf0F3493dPbNPbrb3eY-93uzDDxbzs?usp=sharing"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Google Earth map
+        </a>
+      </p>
+    </section>
+  </main>
 </Layout>
