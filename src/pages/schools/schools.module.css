@@ -1,0 +1,162 @@
+.page {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 32px 16px 80px;
+  color: #edf4e7;
+}
+
+.panel {
+  box-sizing: border-box;
+  width: min(980px, 100%);
+  padding: 28px 24px 24px;
+  border-radius: 12px;
+  background-color: #404e3b;
+}
+
+.resultsHeading h2 {
+  margin: 0;
+  color: #edf4e7;
+}
+
+.header h1 {
+  font-size: clamp(2.25rem, 5vw, 4.25rem);
+  line-height: 1;
+}
+
+.intro {
+  max-width: 560px;
+  margin: 16px 0 0;
+  color: #dfead9;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px 180px;
+  gap: 12px;
+  align-items: end;
+  padding: 18px 0 24px;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #dfead9;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.controls input,
+.controls select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  background-color: #7b9669;
+  color: #253025;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.controls input::placeholder {
+  color: #354332;
+  opacity: 0.8;
+}
+
+.controls input:focus,
+.controls select:focus {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.resultsHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0 14px;
+}
+
+.resultsHeading h2 {
+  font-size: 1.5rem;
+}
+
+.resultsHeading span {
+  color: #dfead9;
+  font-size: 0.95rem;
+}
+
+.schoolList {
+  display: grid;
+  gap: 10px;
+}
+
+.schoolCard {
+  display: block;
+  min-height: 70px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #7b9669;
+  color: #253025;
+  text-decoration: none;
+}
+
+.schoolCard h3,
+.schoolCard p {
+  margin: 0;
+}
+
+.schoolCard h3 {
+  font-size: 1.16rem;
+}
+
+.schoolCard p {
+  margin-top: 4px;
+  color: #eef3eb;
+  font-size: 1rem;
+}
+
+.schoolCard:hover {
+  scale: 1.02;
+}
+
+.emptyState {
+  margin: 0;
+  padding: 20px 0 8px;
+  color: #dfead9;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 8px 8px 32px;
+  }
+
+  .panel {
+    padding: 20px 16px;
+  }
+
+  .controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .searchField {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .searchField {
+    grid-column: auto;
+  }
+}

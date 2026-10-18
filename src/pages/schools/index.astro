@@ -1,0 +1,128 @@
+---
+import { eq } from "drizzle-orm";
+import Layout from "../../layouts/layout.astro";
+import NavBar from "../../components/navbar.astro";
+import { db } from "../../db";
+import { countiesTable, schoolsTable } from "../../db/schema";
+import styles from "./schools.module.css";
+
+const schools = await db
+  .select({
+    id: schoolsTable.id,
+    schoolName: schoolsTable.schoolName,
+    countyName: countiesTable.name,
+  })
+  .from(schoolsTable)
+  .innerJoin(countiesTable, eq(schoolsTable.countyId, countiesTable.id))
+  .execute();
+---
+
+<Layout>
+  <NavBar />
+
+  <main class={styles.page} data-schools={JSON.stringify(schools)}>
+    <section class={styles.panel}>
+      <div class={styles.controls}>
+        <label class={styles.searchField} for="school-search">
+          Search schools
+          <input
+            id="school-search"
+            type="search"
+            placeholder="Search by school or county"
+          />
+        </label>
+        <label for="sort-field">
+          Sort by
+          <select id="sort-field">
+            <option value="name">School name</option>
+            <option value="county">County</option>
+          </select>
+        </label>
+        <label for="sort-order">
+          Order
+          <select id="sort-order">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </label>
+      </div>
+
+      <div class={styles.resultsHeading}>
+        <h2>Schools</h2>
+        <span id="school-count">0 schools</span>
+      </div>
+
+      <div class={styles.schoolList} id="school-list" aria-live="polite"></div>
+      <p class={styles.emptyState} id="empty-state" hidden>
+        No schools match your search.
+      </p>
+    </section>
+  </main>
+
+  <template id="school-template">
+    <a class={styles.schoolCard} data-school-link>
+      <h3 data-school-name></h3>
+      <p data-school-county></p>
+    </a>
+  </template>
+</Layout>
+
+<script>
+  type School = {
+    id: number;
+    schoolName: string;
+    countyName: string;
+  };
+
+  const dataElement = document.querySelector<HTMLElement>("[data-schools]");
+  const schools = JSON.parse(dataElement?.dataset.schools || "[]") as School[];
+  const template =
+    document.querySelector<HTMLTemplateElement>("#school-template");
+  const list = document.getElementById("school-list");
+  const emptyState = document.getElementById("empty-state");
+  const count = document.getElementById("school-count");
+  const search = document.getElementById("school-search") as HTMLInputElement;
+  const sortField = document.getElementById("sort-field") as HTMLSelectElement;
+  const sortOrder = document.getElementById("sort-order") as HTMLSelectElement;
+
+  const renderSchools = () => {
+    if (!template || !list) return;
+    const query = search.value.trim().toLowerCase();
+    const direction = sortOrder.value === "desc" ? -1 : 1;
+    const visibleSchools = schools
+      .filter((school) =>
+        `${school.schoolName} ${school.countyName}`
+          .toLowerCase()
+          .includes(query),
+      )
+      .sort((first, second) => {
+        const firstValue =
+          sortField.value === "county" ? first.countyName : first.schoolName;
+        const secondValue =
+          sortField.value === "county" ? second.countyName : second.schoolName;
+        return firstValue.localeCompare(secondValue) * direction;
+      });
+
+    list.replaceChildren();
+    if (count) {
+      count.textContent = `${visibleSchools.length} ${visibleSchools.length === 1 ? "school" : "schools"}`;
+    }
+    if (emptyState) emptyState.hidden = visibleSchools.length > 0;
+
+    visibleSchools.forEach((school) => {
+      const card = template.content.cloneNode(true) as DocumentFragment;
+      const name = card.querySelector<HTMLElement>("[data-school-name]");
+      const county = card.querySelector<HTMLElement>("[data-school-county]");
+      const link = card.querySelector<HTMLAnchorElement>("[data-school-link]");
+      if (name) name.textContent = school.schoolName;
+      if (county) county.textContent = school.countyName;
+      if (link) link.href = `/schools/${school.id}`;
+      list.append(card);
+    });
+  };
+
+  search.addEventListener("input", renderSchools);
+  sortField.addEventListener("change", renderSchools);
+  sortOrder.addEventListener("change", renderSchools);
+  renderSchools();
+</script>

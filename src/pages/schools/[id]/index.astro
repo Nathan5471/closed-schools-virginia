@@ -1,0 +1,183 @@
+---
+import { eq } from "drizzle-orm";
+import { marked } from "marked";
+import Layout from "../../../layouts/layout.astro";
+import NavBar from "../../../components/navbar.astro";
+import { db } from "../../../db";
+import { countiesTable, imagesTable, schoolsTable } from "../../../db/schema";
+import styles from "./school-view.module.css";
+
+// @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+const id = Number(Astro.params.id);
+const [school] = Number.isInteger(id)
+  ? await db
+      .select({
+        schoolName: schoolsTable.schoolName,
+        schoolType: schoolsTable.schoolType,
+        status: schoolsTable.status,
+        closedYear: schoolsTable.closedYear,
+        address: schoolsTable.address,
+        description: schoolsTable.description,
+        sourceLinks: schoolsTable.sourceLinks,
+        countyName: countiesTable.name,
+      })
+      .from(schoolsTable)
+      .innerJoin(countiesTable, eq(schoolsTable.countyId, countiesTable.id))
+      .where(eq(schoolsTable.id, id))
+      .execute()
+  : [];
+
+const images = Number.isInteger(id)
+  ? await db
+      .select({
+        url: imagesTable.url,
+        name: imagesTable.name,
+        description: imagesTable.description,
+      })
+      .from(imagesTable)
+      .where(eq(imagesTable.schoolId, id))
+      .execute()
+  : [];
+
+if (!school) {
+  // @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+  return Astro.redirect("/schools", 302);
+}
+
+const formatLabel = (value: string | null) =>
+  value
+    ? value.replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "Not provided";
+const descriptionHtml = school.description
+  ? marked.parse(school.description, { gfm: true, breaks: true })
+  : "";
+---
+
+<Layout>
+  <NavBar />
+
+  <main class={styles.page}>
+    <header class={styles.header}>
+      <a class={styles.backLink} href="/schools">Back to schools</a>
+      <h1>{school.schoolName}</h1>
+      <p class={styles.county}>{school.countyName}</p>
+    </header>
+
+    <div class={styles.columns}>
+      <article class={styles.descriptionColumn}>
+        <h2>About this school</h2>
+        {
+          descriptionHtml ? (
+            <div class={styles.markdown} set:html={descriptionHtml} />
+          ) : (
+            <p class={styles.muted}>
+              No information available for this school.
+            </p>
+          )
+        }
+      </article>
+
+      <aside class={styles.sidebar}>
+        <section class={styles.carousel} aria-label="School images">
+          <div class={styles.slides}>
+            {
+              images.length > 0 ? (
+                images.map((image, index) => (
+                  <figure
+                    class={styles.slide}
+                    data-slide={index}
+                    hidden={index !== 0}
+                  >
+                    <img src={image.url} alt={image.name} />
+                    <figcaption>
+                      <strong>{image.name}</strong>
+                      {image.description && <span>{image.description}</span>}
+                    </figcaption>
+                  </figure>
+                ))
+              ) : (
+                <div class={styles.noImage}>No images available</div>
+              )
+            }
+          </div>
+          {
+            images.length > 1 && (
+              <div class={styles.carouselControls}>
+                <button type="button" data-carousel-previous>
+                  Previous
+                </button>
+                <span data-carousel-count>1 / {images.length}</span>
+                <button type="button" data-carousel-next>
+                  Next
+                </button>
+              </div>
+            )
+          }
+        </section>
+
+        <section class={styles.stats} aria-labelledby="school-stats">
+          <h2 id="school-stats">At a glance</h2>
+          <dl>
+            <div>
+              <dt>School type</dt><dd>{formatLabel(school.schoolType)}</dd>
+            </div>
+            <div><dt>Status</dt><dd>{formatLabel(school.status)}</dd></div>
+            <div>
+              <dt>Closed</dt><dd>{school.closedYear ?? "Not provided"}</dd>
+            </div>
+            <div>
+              <dt>Address</dt><dd>{school.address ?? "Not provided"}</dd>
+            </div>
+          </dl>
+        </section>
+      </aside>
+    </div>
+
+    <section class={styles.sources} aria-labelledby="sources-heading">
+      <h2 id="sources-heading">Sources and references</h2>
+      {
+        school.sourceLinks && school.sourceLinks.length > 0 ? (
+          <ul>
+            {school.sourceLinks.map((link) => (
+              <li>
+                <a href={link} target="_blank" rel="noreferrer">
+                  {link}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class={styles.muted}>No sources have been added.</p>
+        )
+      }
+    </section>
+  </main>
+</Layout>
+
+<script>
+  const slides = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-slide]"),
+  );
+  const counter = document.querySelector<HTMLElement>("[data-carousel-count]");
+  let currentSlide = 0;
+
+  const showSlide = (index: number) => {
+    if (slides.length === 0) return;
+    currentSlide = (index + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      slide.hidden = slideIndex !== currentSlide;
+    });
+    if (counter) counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+  };
+
+  document
+    .querySelector("[data-carousel-previous]")
+    ?.addEventListener("click", () => {
+      showSlide(currentSlide - 1);
+    });
+  document
+    .querySelector("[data-carousel-next]")
+    ?.addEventListener("click", () => {
+      showSlide(currentSlide + 1);
+    });
+</script>
