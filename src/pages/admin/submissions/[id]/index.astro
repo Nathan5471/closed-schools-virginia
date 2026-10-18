@@ -1,0 +1,94 @@
+---
+import { eq } from "drizzle-orm";
+import Layout from "../../../../layouts/layout.astro";
+import AdminNavBar from "../../../../components/adminnavbar.astro";
+import { db } from "../../../../db";
+import { submissionsTable } from "../../../../db/schema";
+import styles from "../submissions.module.css";
+
+// @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+const id = Number(Astro.params.id);
+const [submission] = Number.isInteger(id)
+  ? await db
+      .select()
+      .from(submissionsTable)
+      .where(eq(submissionsTable.id, id))
+      .execute()
+  : [];
+
+if (!submission) {
+  // @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+  return Astro.redirect("/admin/submissions", 302);
+}
+
+const submittedDate = new Date(submission.submittedAt).toLocaleDateString();
+---
+
+<Layout>
+  <AdminNavBar />
+
+  <main class={styles.page}>
+    <a class={styles.backLink} href="/admin/submissions"
+      >&larr; Back to submissions</a
+    >
+    <article class={styles.detailCard}>
+      <p class={styles.eyebrow}>Submission details</p>
+      <h1>{submission.schoolName}</h1>
+      <p class={styles.detailStatus} data-status={submission.submissionStatus}>
+        {
+          submission.submissionStatus === "approved"
+            ? "Accepted"
+            : submission.submissionStatus === "rejected"
+              ? "Rejected"
+              : "Pending review"
+        }
+      </p>
+
+      <dl class={styles.detailGrid}>
+        <div><dt>County</dt><dd>{submission.countyName}</dd></div>
+        <div><dt>Submitted by</dt><dd>{submission.submittedBy}</dd></div>
+        <div><dt>Email</dt><dd>{submission.submitterEmail}</dd></div>
+        <div><dt>Submitted</dt><dd>{submittedDate}</dd></div>
+        <div>
+          <dt>School type</dt><dd>{submission.schoolType ?? "Not provided"}</dd>
+        </div>
+        <div>
+          <dt>School status</dt><dd>
+            {submission.schoolStatus ?? "Not provided"}
+          </dd>
+        </div>
+        <div>
+          <dt>Closed year</dt><dd>{submission.closedYear ?? "Not provided"}</dd>
+        </div>
+        <div>
+          <dt>Address</dt><dd>{submission.address ?? "Not provided"}</dd>
+        </div>
+      </dl>
+
+      <section class={styles.detailSection}>
+        <h2>Additional information</h2>
+        <p>
+          {submission.additionalInfo ?? "No additional information provided."}
+        </p>
+      </section>
+
+      {
+        submission.attachmentedURLs &&
+          submission.attachmentedURLs.length > 0 && (
+            <section class={styles.detailSection}>
+              <h2>Attachments</h2>
+              <ul>
+                {submission.attachmentedURLs.map((url) => (
+                  <li>
+                    <a href={url} target="_blank" rel="noreferrer">
+                      View attachment
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+      }
+    </article>
+  </main>
+</Layout>

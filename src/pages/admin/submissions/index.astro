@@ -1,11 +1,168 @@
 ---
-import styles from "./submissions.module.css"
-import Layout from "../../../layouts/layout.astro"
-import AdminNavBar from "../../../components/adminnavbar.astro"
+import styles from "./submissions.module.css";
+import Layout from "../../../layouts/layout.astro";
+import AdminNavBar from "../../../components/adminnavbar.astro";
 ---
 
 <Layout>
-    <div>
-        <AdminNavBar/>
-    </div>
+  <AdminNavBar />
+
+  <main class={styles.page}>
+    <header class={styles.header}>
+      <p class={styles.eyebrow}>Organizer review</p>
+      <h1>Submission inbox</h1>
+      <p class={styles.intro}>
+        Review new school submissions and keep track of decisions already made.
+      </p>
+    </header>
+
+    <section class={styles.section} aria-labelledby="unreviewed-heading">
+      <div class={styles.sectionHeading}>
+        <div>
+          <p class={styles.sectionLabel}>Needs attention</p>
+          <h2 id="unreviewed-heading">Unreviewed submissions</h2>
+        </div>
+        <span class={styles.count} data-count="unreviewed">0</span>
+      </div>
+      <div class={styles.submissionList} data-list="unreviewed">
+        <p class={styles.message}>Loading submissions...</p>
+      </div>
+    </section>
+
+    <section class={styles.section} aria-labelledby="reviewed-heading">
+      <div class={styles.sectionHeading}>
+        <div>
+          <p class={styles.sectionLabel}>Decision history</p>
+          <h2 id="reviewed-heading">Reviewed submissions</h2>
+        </div>
+        <span class={styles.count} data-count="reviewed">0</span>
+      </div>
+      <div class={styles.submissionList} data-list="reviewed">
+        <p class={styles.message}>Reviewed submissions will appear here.</p>
+      </div>
+    </section>
+
+    <p class={`${styles.message} ${styles.error}`} data-error hidden>
+      We could not load submissions. Please refresh and try again.
+    </p>
+  </main>
+
+  <template id="submission-template">
+    <article class={styles.submissionCard}>
+      <div class={styles.cardContent}>
+        <p class={styles.submissionTitle} data-title></p>
+        <p class={styles.submissionMeta} data-meta></p>
+        <p class={styles.status} data-status hidden></p>
+      </div>
+      <a class={styles.viewLink} data-view-link
+        >View submission <span aria-hidden="true">&rarr;</span></a
+      >
+    </article>
+  </template>
 </Layout>
+
+<script>
+  type Submission = {
+    id: number;
+    schoolName: string;
+    countyName: string;
+    submittedBy: string;
+    submissionStatus: "pending" | "approved" | "rejected";
+  };
+
+  const template = document.querySelector<HTMLTemplateElement>(
+    "#submission-template",
+  );
+  const errorMessage = document.querySelector<HTMLElement>("[data-error]");
+
+  const createCard = (submission: Submission, reviewed: boolean) => {
+    if (!template) return null;
+
+    const card = template.content.cloneNode(true) as DocumentFragment;
+    const title = card.querySelector<HTMLElement>("[data-title]");
+    const meta = card.querySelector<HTMLElement>("[data-meta]");
+    const status = card.querySelector<HTMLElement>("[data-status]");
+    const viewLink = card.querySelector<HTMLAnchorElement>("[data-view-link]");
+
+    if (title) {
+      title.textContent = `${submission.schoolName} (${submission.countyName})`;
+    }
+    if (meta) {
+      meta.textContent = `Submitted by ${submission.submittedBy}`;
+    }
+    if (status && reviewed) {
+      status.hidden = false;
+      status.dataset.status = submission.submissionStatus;
+      status.textContent =
+        submission.submissionStatus === "approved" ? "Accepted" : "Rejected";
+    }
+    if (viewLink) {
+      viewLink.href = `/admin/submissions/${submission.id}`;
+    }
+
+    return card;
+  };
+
+  const renderList = (
+    selector: string,
+    submissions: Submission[],
+    reviewed: boolean,
+  ) => {
+    const list = document.querySelector<HTMLElement>(
+      `[data-list="${selector}"]`,
+    );
+    const count = document.querySelector<HTMLElement>(
+      `[data-count="${selector}"]`,
+    );
+    if (!list) return;
+
+    list.replaceChildren();
+    if (count) count.textContent = String(submissions.length);
+
+    if (submissions.length === 0) {
+      const emptyMessage = document.createElement("p");
+      emptyMessage.className = "submission-empty";
+      emptyMessage.textContent = reviewed
+        ? "No reviewed submissions yet."
+        : "There are no submissions waiting for review.";
+      list.append(emptyMessage);
+      return;
+    }
+
+    submissions.forEach((submission) => {
+      const card = createCard(submission, reviewed);
+      if (card) list.append(card);
+    });
+  };
+
+  const loadSubmissions = async () => {
+    try {
+      const response = await fetch("/api/getSubmissions");
+      if (!response.ok) throw new Error("Unable to load submissions");
+
+      const data = (await response.json()) as { submissions?: Submission[] };
+      const submissions = data.submissions ?? [];
+      renderList(
+        "unreviewed",
+        submissions.filter(
+          (submission) => submission.submissionStatus === "pending",
+        ),
+        false,
+      );
+      renderList(
+        "reviewed",
+        submissions.filter(
+          (submission) => submission.submissionStatus !== "pending",
+        ),
+        true,
+      );
+    } catch {
+      if (errorMessage) errorMessage.hidden = false;
+      document.querySelectorAll<HTMLElement>("[data-list]").forEach((list) => {
+        list.replaceChildren();
+      });
+    }
+  };
+
+  loadSubmissions();
+</script>
