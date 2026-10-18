@@ -20,6 +20,40 @@
   color: #edf4e7;
 }
 
+.countyHeader {
+  padding: 8px 0 18px;
+  color: #dfead9;
+}
+
+.countyHeader p {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.countyHeader h1 {
+  margin: 0;
+  color: #edf4e7;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: #dfead9;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover,
+.backLink:focus {
+  color: #ffffff;
+  outline: none;
+}
+
 .header h1 {
   font-size: clamp(2.25rem, 5vw, 4.25rem);
   line-height: 1;

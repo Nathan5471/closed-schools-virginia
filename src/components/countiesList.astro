@@ -23,6 +23,7 @@ const {
   data-counties-list-content-class={styles.countiesListContent}
   data-counties-list-item-class={styles.countiesListItem}
   data-counties-list-message-class={styles.countiesListMessage}
+  data-county-link-class={styles.countyLink}
   data-delete-county-button-class={styles.deleteCountyButton}
   aria-labelledby="counties-list-heading"
 >
@@ -64,6 +65,7 @@ const {
     const contentClass = list.dataset.countiesListContentClass;
     const itemClass = list.dataset.countiesListItemClass;
     const messageClass = list.dataset.countiesListMessageClass;
+    const countyLinkClass = list.dataset.countyLinkClass;
     const deleteButtonClass = list.dataset.deleteCountyButtonClass;
     const content = contentClass
       ? list.querySelector<HTMLElement>(`.${contentClass}`)
@@ -77,7 +79,14 @@ const {
       "[data-county-order]",
     );
     let allCounties: County[] = [];
-    if (!content || !itemClass || !messageClass || !deleteButtonClass) return;
+    if (
+      !content ||
+      !itemClass ||
+      !messageClass ||
+      !deleteButtonClass ||
+      !countyLinkClass
+    )
+      return;
 
     const renderCounties = () => {
       const query = search?.value.trim().toLowerCase() || "";
@@ -110,7 +119,13 @@ const {
         const countyLabel = document.createElement("span");
         countyLabel.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
 
-        countyItem.append(countyLabel);
+        const countyLink = document.createElement("a");
+        countyLink.className = countyLinkClass;
+        countyLink.href = allowDelete
+          ? `/counties/${county.id}?from=admin`
+          : `/counties/${county.id}`;
+        countyLink.append(countyLabel);
+        countyItem.append(countyLink);
 
         if (allowDelete) {
           const deleteButton = document.createElement("button");

@@ -85,6 +85,19 @@
   margin-top: 8px;
 }
 
+.countyLink {
+  display: block;
+  flex: 1;
+  color: #353839;
+  text-decoration: none;
+}
+
+.countyLink:hover,
+.countyLink:focus {
+  color: #253025;
+  outline: none;
+}
+
 .deleteCountyButton {
   flex: 0 0 auto;
   margin-left: auto;
