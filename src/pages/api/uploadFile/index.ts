@@ -48,6 +48,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const file = formData.get("file");
+  const requestedName = formData.get("name");
   if (!(file instanceof File) || file.size <= 0) {
     console.error(`[upload ${requestId}] missing or empty file`);
     return jsonResponse({ message: "A valid file is required" }, 400);
@@ -75,7 +76,11 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ message: "Invalid file extension" }, 400);
   }
 
-  const filename = `user-upload-${Date.now()}-${Math.random()
+  const uploadName =
+    typeof requestedName === "string"
+      ? requestedName.trim().replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80)
+      : "";
+  const filename = `${uploadName ? `source-${uploadName}` : "user-upload"}-${Date.now()}-${Math.random()
     .toString(36)
     .substring(2, 8)}.${extension}`;
 

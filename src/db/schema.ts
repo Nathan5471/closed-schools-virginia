@@ -1,4 +1,12 @@
-import { bigint, integer, pgTable, varchar, pgEnum } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  bigint,
+  integer,
+  pgTable,
+  varchar,
+  pgEnum,
+  text,
+} from "drizzle-orm/pg-core";
 import { defineRelations } from "drizzle-orm";
 
 export const usersTable = pgTable("users", {
@@ -19,11 +27,11 @@ export const imagesTable = pgTable("images", {
     .references(() => schoolsTable.id, { onDelete: "cascade" }),
   url: varchar({ length: 255 }).notNull(), // Cloudflare R2 URL
   name: varchar({ length: 255 }).notNull(),
-  description: varchar({ length: 255 }),
+  description: text(),
   uploadedBy: integer()
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  uploadedAt: integer().notNull(),
+  uploadedAt: bigint({ mode: "number" }).notNull(),
 });
 
 export const schoolTypesEnum = pgEnum("schoolType", [
@@ -47,6 +55,14 @@ export const schoolsTable = pgTable("schools", {
   status: statusEnum(),
   closedYear: integer(),
   address: varchar({ length: 255 }),
+  sourceLinks: varchar({ length: 2048 }).array(),
+  description: text(),
+  createdAt: bigint({ mode: "number" })
+    .notNull()
+    .default(sql`(extract(epoch from now()) * 1000)::bigint`),
+  updatedAt: bigint({ mode: "number" })
+    .notNull()
+    .default(sql`(extract(epoch from now()) * 1000)::bigint`),
 });
 
 export const submissionStatusEnum = pgEnum("submissionStatus", [

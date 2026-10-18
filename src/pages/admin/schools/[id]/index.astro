@@ -1,9 +1,14 @@
 ---
 import { eq } from "drizzle-orm";
+import { marked } from "marked";
 import AdminNavBar from "../../../../components/adminnavbar.astro";
 import Layout from "../../../../layouts/layout.astro";
 import { db } from "../../../../db";
-import { countiesTable, schoolsTable } from "../../../../db/schema";
+import {
+  countiesTable,
+  imagesTable,
+  schoolsTable,
+} from "../../../../db/schema";
 import styles from "../school.module.css";
 
 // @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
@@ -16,11 +21,34 @@ const [school] = Number.isInteger(id)
         status: schoolsTable.status,
         closedYear: schoolsTable.closedYear,
         address: schoolsTable.address,
+        description: schoolsTable.description,
+        sourceLinks: schoolsTable.sourceLinks,
+        createdAt: schoolsTable.createdAt,
+        updatedAt: schoolsTable.updatedAt,
         countyName: countiesTable.name,
+        countyId: countiesTable.id,
       })
       .from(schoolsTable)
       .innerJoin(countiesTable, eq(schoolsTable.countyId, countiesTable.id))
       .where(eq(schoolsTable.id, id))
+      .execute()
+  : [];
+
+const counties = await db
+  .select({ id: countiesTable.id, name: countiesTable.name })
+  .from(countiesTable)
+  .execute();
+
+const images = Number.isInteger(id)
+  ? await db
+      .select({
+        id: imagesTable.id,
+        url: imagesTable.url,
+        name: imagesTable.name,
+        description: imagesTable.description,
+      })
+      .from(imagesTable)
+      .where(eq(imagesTable.schoolId, id))
       .execute()
   : [];
 
@@ -34,14 +62,18 @@ const formatLabel = (value: string | null) =>
   value
     ? value.replace(/\b\w/g, (letter) => letter.toUpperCase())
     : "Not provided";
+const formatDate = (value: number) => new Date(value).toLocaleString();
+const descriptionHtml = school.description
+  ? marked.parse(school.description, { gfm: true, breaks: true })
+  : "";
 ---
 
 <Layout>
   <AdminNavBar />
 
-  <main class={styles.page}>
+  <main class={styles.page} data-school-id={id}>
     <article class={styles.panel}>
-      <a class={styles.backLink} href="/admin">&larr; Back to schools</a>
+      <a class={styles.backLink} href="/admin">Back to schools</a>
       <header class={styles.schoolHeader}>
         <h1>{school.schoolName}</h1>
         <p class={styles.county}>{school.countyName}</p>
@@ -66,8 +98,484 @@ const formatLabel = (value: string | null) =>
             <dt>Address</dt>
             <dd>{formatValue(school.address)}</dd>
           </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{formatDate(school.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{formatDate(school.updatedAt)}</dd>
+          </div>
         </dl>
+      </section>
+
+      <section
+        class={styles.contentSection}
+        aria-labelledby="school-description"
+      >
+        <h2 id="school-description">Description</h2>
+        {
+          descriptionHtml ? (
+            <div class={styles.description} set:html={descriptionHtml} />
+          ) : (
+            <p class={styles.muted}>No description has been added.</p>
+          )
+        }
+      </section>
+
+      <section class={styles.contentSection} aria-labelledby="school-sources">
+        <h2 id="school-sources">Sources and references</h2>
+        {
+          school.sourceLinks && school.sourceLinks.length > 0 ? (
+            <ul class={styles.sourceList}>
+              {school.sourceLinks.map((link) => (
+                <li>
+                  <a href={link} target="_blank" rel="noreferrer">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class={styles.muted}>No sources have been added.</p>
+          )
+        }
+      </section>
+
+      <section class={styles.contentSection} aria-labelledby="school-images">
+        <h2 id="school-images">Images</h2>
+        {
+          images.length > 0 ? (
+            <div class={styles.imageGrid} id="school-image-list">
+              {images.map((image) => (
+                <figure class="imageCard" data-image-id={image.id}>
+                  <img src={image.url} alt={image.name} />
+                  <label>
+                    Image name
+                    <input data-image-name value={image.name} required />
+                  </label>
+                  <label>
+                    Description
+                    <textarea data-image-description rows="3" required>
+                      {image.description ?? ""}
+                    </textarea>
+                  </label>
+                  <button
+                    class="deleteImageButton"
+                    type="button"
+                    data-remove-image={image.id}
+                  >
+                    Remove image
+                  </button>
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <p class={styles.muted} id="no-images">
+              No images have been added.
+            </p>
+          )
+        }
+      </section>
+
+      <section class={styles.editorSection} aria-labelledby="edit-school">
+        <h2 id="edit-school">Edit school</h2>
+        <form id="school-form">
+          <div class={styles.formGrid}>
+            <label>
+              School name
+              <input name="schoolName" required value={school.schoolName} />
+            </label>
+            <label>
+              County
+              <select name="countyId" required>
+                {
+                  counties.map((county) => (
+                    <option
+                      value={county.id}
+                      selected={county.id === school.countyId}
+                    >
+                      {county.name}
+                    </option>
+                  ))
+                }
+              </select>
+            </label>
+            <label>
+              School type
+              <select name="schoolType">
+                <option value="">Unknown</option>
+                <option value="white" selected={school.schoolType === "white"}
+                  >White</option
+                >
+                <option
+                  value="colored"
+                  selected={school.schoolType === "colored"}>Colored</option
+                >
+                <option value="mixed" selected={school.schoolType === "mixed"}
+                  >Mixed</option
+                >
+              </select>
+            </label>
+            <label>
+              Status
+              <select name="status">
+                <option value="">Unknown</option>
+                <option value="standing" selected={school.status === "standing"}
+                  >Standing</option
+                >
+                <option
+                  value="repurposed"
+                  selected={school.status === "repurposed"}>Repurposed</option
+                >
+                <option
+                  value="not standing"
+                  selected={school.status === "not standing"}
+                  >Not standing</option
+                >
+              </select>
+            </label>
+            <label>
+              Closed year
+              <input
+                name="closedYear"
+                type="number"
+                min="0"
+                value={school.closedYear ?? undefined}
+              />
+            </label>
+            <label>
+              Address
+              <input name="address" value={school.address ?? undefined} />
+            </label>
+          </div>
+          <label>
+            Description <span>(Markdown supported)</span>
+            <textarea name="description" rows="8"
+              >{school.description ?? ""}</textarea
+            >
+          </label>
+          <div class={styles.referenceEditor}>
+            <div class={styles.referenceChoices}>
+              <div class={styles.referenceChoice}>
+                <label for="source-link-input">
+                  Add source link
+                  <span>Use a website URL.</span>
+                </label>
+                <div class={styles.addRow}>
+                  <input
+                    id="source-link-input"
+                    type="url"
+                    placeholder="https://example.com/source"
+                  />
+                  <button
+                    id="add-source-link"
+                    class={styles.secondaryButton}
+                    type="button">Add link</button
+                  >
+                </div>
+              </div>
+              <div class={styles.referenceChoice}>
+                <label for="source-image-input">
+                  Upload source image
+                  <span>The uploaded image URL will be added as a source.</span>
+                </label>
+                <input
+                  id="source-image-name"
+                  type="text"
+                  placeholder="Source image name"
+                />
+                <input id="source-image-input" type="file" accept="image/*" />
+                <p
+                  class={styles.formMessage}
+                  id="source-image-message"
+                  role="status"
+                >
+                </p>
+              </div>
+            </div>
+            <ul
+              id="source-link-list"
+              class={styles.editList}
+              data-links={JSON.stringify(school.sourceLinks ?? [])}
+            >
+            </ul>
+          </div>
+
+          <label>
+            Add images
+            <span
+              >Images are displayed on this school page. Maximum 15 MB each.</span
+            >
+            <input id="school-image-input" type="file" accept="image/*" />
+          </label>
+          <p class={styles.formMessage} id="image-upload-message" role="status">
+          </p>
+          <button class={styles.saveButton} type="submit">Save changes</button>
+          <p class={styles.formMessage} id="school-form-message" role="status">
+          </p>
+        </form>
       </section>
     </article>
   </main>
 </Layout>
+
+<script>
+  const form = document.getElementById("school-form") as HTMLFormElement;
+  const message = document.getElementById(
+    "school-form-message",
+  ) as HTMLParagraphElement;
+  const schoolId = Number(
+    document.querySelector<HTMLElement>("[data-school-id]")?.dataset.schoolId,
+  );
+  const sourceLinkInput = document.getElementById(
+    "source-link-input",
+  ) as HTMLInputElement;
+  const sourceImageInput = document.getElementById(
+    "source-image-input",
+  ) as HTMLInputElement;
+  const sourceImageNameInput = document.getElementById(
+    "source-image-name",
+  ) as HTMLInputElement;
+  const sourceImageMessage = document.getElementById(
+    "source-image-message",
+  ) as HTMLParagraphElement;
+  const sourceLinkList = document.getElementById(
+    "source-link-list",
+  ) as HTMLUListElement;
+  const imageInput = document.getElementById(
+    "school-image-input",
+  ) as HTMLInputElement;
+  const imageList = document.getElementById("school-image-list");
+  const imageMessage = document.getElementById(
+    "image-upload-message",
+  ) as HTMLParagraphElement;
+  const sourceLinks = JSON.parse(
+    sourceLinkList.dataset.links || "[]",
+  ) as string[];
+
+  const renderSourceLinks = () => {
+    sourceLinkList.replaceChildren();
+    sourceLinks.forEach((link, index) => {
+      const item = document.createElement("li");
+      const text = document.createElement("span");
+      text.textContent = link;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () => {
+        sourceLinks.splice(index, 1);
+        renderSourceLinks();
+      });
+      item.append(text, remove);
+      sourceLinkList.append(item);
+    });
+  };
+
+  document.getElementById("add-source-link")?.addEventListener("click", () => {
+    const link = sourceLinkInput.value.trim();
+    if (!link || sourceLinks.includes(link)) return;
+    sourceLinks.push(link);
+    sourceLinkInput.value = "";
+    renderSourceLinks();
+  });
+
+  sourceImageInput.addEventListener("change", async () => {
+    const file = sourceImageInput.files?.[0];
+    if (!file) return;
+    const sourceImageName = sourceImageNameInput.value.trim();
+    if (!sourceImageName) {
+      sourceImageMessage.textContent =
+        "Enter a source image name before uploading.";
+      sourceImageInput.value = "";
+      return;
+    }
+
+    sourceImageMessage.textContent = `Uploading ${file.name}...`;
+    const formData = new FormData();
+    formData.append("name", sourceImageName);
+    formData.append("file", file, file.name);
+    try {
+      const response = await fetch("/api/uploadFile", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as {
+        postUploadURL?: string;
+        message?: string;
+      };
+      if (!response.ok || !result.postUploadURL) {
+        throw new Error(result.message || "Unable to upload source image");
+      }
+      if (!sourceLinks.includes(result.postUploadURL)) {
+        sourceLinks.push(result.postUploadURL);
+        renderSourceLinks();
+      }
+      sourceImageMessage.textContent = "Source image added.";
+    } catch (error) {
+      sourceImageMessage.textContent =
+        error instanceof Error
+          ? error.message
+          : "Unable to upload source image";
+    } finally {
+      sourceImageInput.value = "";
+      sourceImageNameInput.value = "";
+    }
+  });
+
+  const removeImage = async (imageId: number, card: HTMLElement) => {
+    const response = await fetch("/api/deleteSchoolImage", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageId }),
+    });
+    if (!response.ok) throw new Error("Unable to remove image");
+    card.remove();
+  };
+
+  const bindImageRemoval = (root: ParentNode = document) => {
+    root
+      .querySelectorAll<HTMLElement>("[data-remove-image]")
+      .forEach((button) => {
+        button.addEventListener("click", async () => {
+          const card = button.closest<HTMLElement>("[data-image-id]");
+          if (!card) return;
+          button.setAttribute("disabled", "true");
+          try {
+            await removeImage(Number(button.dataset.removeImage), card);
+          } catch (error) {
+            button.removeAttribute("disabled");
+            imageMessage.textContent =
+              error instanceof Error ? error.message : "Unable to remove image";
+          }
+        });
+      });
+  };
+
+  const appendImage = (image: {
+    id: number;
+    url: string;
+    name: string;
+    description?: string | null;
+  }) => {
+    if (!imageList) return;
+    document.getElementById("no-images")?.remove();
+    const card = document.createElement("figure");
+    card.className = "imageCard";
+    card.dataset.imageId = String(image.id);
+    const imageElement = document.createElement("img");
+    imageElement.src = image.url;
+    imageElement.alt = image.name;
+    const nameLabel = document.createElement("label");
+    nameLabel.textContent = "Image name";
+    const nameInput = document.createElement("input");
+    nameInput.dataset.imageName = "true";
+    nameInput.value = image.name;
+    nameInput.required = true;
+    nameLabel.append(nameInput);
+    const descriptionLabel = document.createElement("label");
+    descriptionLabel.textContent = "Description";
+    const descriptionInput = document.createElement("textarea");
+    descriptionInput.dataset.imageDescription = "true";
+    descriptionInput.rows = 3;
+    descriptionInput.required = true;
+    descriptionInput.value = image.description ?? "";
+    descriptionLabel.append(descriptionInput);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "deleteImageButton";
+    remove.dataset.removeImage = String(image.id);
+    remove.textContent = "Remove image";
+    card.append(imageElement, nameLabel, descriptionLabel, remove);
+    imageList.append(card);
+    bindImageRemoval(card);
+  };
+
+  imageInput.addEventListener("change", async () => {
+    const file = imageInput.files?.[0];
+    if (!file) return;
+    imageMessage.textContent = "";
+    const formData = new FormData();
+    formData.append("schoolId", String(schoolId));
+    formData.append("file", file, file.name);
+    imageMessage.textContent = `Uploading ${file.name}...`;
+    try {
+      const response = await fetch("/api/uploadSchoolImage", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as {
+        image?: { id: number; url: string; name: string; description?: string };
+        message?: string;
+      };
+      if (!response.ok || !result.image) {
+        throw new Error(result.message || "Unable to upload image");
+      }
+      appendImage(result.image);
+      imageMessage.textContent =
+        "Image uploaded. Add its description before saving.";
+    } catch (error) {
+      imageMessage.textContent =
+        error instanceof Error ? error.message : "Unable to upload image";
+    } finally {
+      imageInput.value = "";
+    }
+  });
+
+  renderSourceLinks();
+  bindImageRemoval();
+
+  form.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    message.textContent = "Saving...";
+
+    const formData = new FormData(form);
+    const closedYear = formData.get("closedYear");
+    const imageCards = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-image-id]"),
+    );
+    const imageRecords = imageCards.map((card) => ({
+      id: Number(card.dataset.imageId),
+      name:
+        card
+          .querySelector<HTMLInputElement>("[data-image-name]")
+          ?.value.trim() || "",
+      description:
+        card
+          .querySelector<HTMLTextAreaElement>("[data-image-description]")
+          ?.value.trim() || "",
+    }));
+    if (imageRecords.some((image) => !image.name || !image.description)) {
+      message.textContent =
+        "Every image needs a name and description before saving.";
+      return;
+    }
+    const data = {
+      schoolId,
+      schoolName: formData.get("schoolName"),
+      countyId: Number(formData.get("countyId")),
+      schoolType: formData.get("schoolType") || null,
+      status: formData.get("status") || null,
+      closedYear: closedYear ? Number(closedYear) : null,
+      address: formData.get("address") || null,
+      description: formData.get("description") || null,
+      sourceLinks,
+      images: imageRecords,
+    };
+
+    try {
+      const response = await fetch("/api/updateSchool", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.message || "Unable to save school");
+      window.location.reload();
+    } catch (error) {
+      message.textContent =
+        error instanceof Error ? error.message : "Unable to save school";
+    }
+  });
+</script>
