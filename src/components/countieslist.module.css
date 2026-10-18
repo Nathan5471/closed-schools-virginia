@@ -1,83 +1,75 @@
-.listdiv {
+.countiesList {
+  box-sizing: border-box;
   display: flex;
-  flex-direction: vertical;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #404e3b;
+  overflow: hidden;
 }
 
-.countiesList {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    width: var(--counties-list-width);
-    min-width: 0;
-    height: 100%;
-    overflow: hidden;
-  }
+.countiesListHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  color: #bac8b1;
+}
 
-  .countiesListHeader {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex: 0 0 auto;
-    padding: 20px;
-    background-color: #404e3b;
-    color: #bac8b1;
-  }
+.countiesListHeader h2 {
+  margin: 0;
+  font-size: 2em;
+  text-align: center;
+  font-weight: 700;
+}
 
-  .countiesListHeader h2 {
-    margin: 0;
-    font-size: 2em;
-    text-align: center;
-    font-weight: 700;
-  }
+.countiesListContent {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+}
 
-  .countiesListContent {
-    flex: 1 1 auto;
-    min-height: 0;
-    padding: 12px;
-    overflow-y: auto;
-  }
+.countiesListItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #7b9669;
+  color: #353839;
+  border-radius: 4px;
+  font-size: 18px;
+}
 
-  :global(.countiesListItem) {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background-color: #7b9669;
-    color: #353839;
-    border-radius: 4px;
-    font-size: 18px;
-  }
+.countiesListItem + .countiesListItem {
+  margin-top: 8px;
+}
 
-  :global(.countiesListItem + .countiesListItem) {
-    margin-top: 8px;
-  }
+.deleteCountyButton {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 0;
+  background-color: #7b9669;
+  border: none;
+  color: #353839;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 125ms ease-in-out;
+}
 
-  :global(.deleteCountyButton) {
-    flex: 0 0 auto;
-    margin-left: auto;
-    padding: 0;
-    background-color: #7b9669;
-    border: none;
-    color: #353839;
-    cursor: pointer;
-    font-size: 24px;
-    line-height: 1;
-    transition: transform 125ms ease-in-out;
-  }
+.deleteCountyButton:hover {
+  transform: scale(1.67);
+}
 
-  :global(.deleteCountyButton:hover) {
-    transform: scale(1.67);
-  }
+.deleteCountyButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
 
-  :global(.deleteCountyButton:disabled) {
-    cursor: wait;
-    opacity: 0.6;
-  }
-
-  :global(.countiesListMessage) {
-    margin: 12px;
-    color: #bac8b1;
-    text-align: center;
-  }
+.countiesListMessage {
+  color: #bac8b1;
+  text-align: center;
+}

@@ -1,5 +1,5 @@
 ---
-import styles from "./countieslist.module.css"
+import styles from "./countieslist.module.css";
 
 interface Props {
   width?: string;
@@ -16,37 +16,48 @@ const {
 
 <section
   class={styles.countiesList}
-  style={`--counties-list-width: ${width}`}
+  style={`width: ${width}`}
   data-refresh-event={refreshEvent}
   data-allow-delete={allowDelete}
+  data-counties-list-class={styles.countiesList}
+  data-counties-list-content-class={styles.countiesListContent}
+  data-counties-list-item-class={styles.countiesListItem}
+  data-counties-list-message-class={styles.countiesListMessage}
+  data-delete-county-button-class={styles.deleteCountyButton}
   aria-labelledby="counties-list-heading"
 >
   <div class={styles.countiesListHeader}>
     <h2 id="counties-list-heading">Counties</h2>
-    <div class={styles.countiesListContent} aria-live="polite" aria-busy="true">
-      <p class={styles.countiesListMessage}>Loading counties...</p>
-    </div>
+  </div>
+  <div class={styles.countiesListContent} aria-live="polite" aria-busy="true">
+    <p class={styles.countiesListMessage}>Loading counties...</p>
   </div>
 </section>
 
 <script>
   type County = { id: number; name: string; schoolCount: number };
- 
-  const lists = document.querySelectorAll<HTMLElement>(".countiesList");
-  console.log(lists)
+
+  const lists = document.querySelectorAll<HTMLElement>(
+    "[data-counties-list-class]",
+  );
   lists.forEach((list) => {
-    const content = list.querySelector<HTMLElement>(".countiesListContent");
+    const contentClass = list.dataset.countiesListContentClass;
+    const itemClass = list.dataset.countiesListItemClass;
+    const messageClass = list.dataset.countiesListMessageClass;
+    const deleteButtonClass = list.dataset.deleteCountyButtonClass;
+    const content = contentClass
+      ? list.querySelector<HTMLElement>(`.${contentClass}`)
+      : null;
     const refreshEvent = list.dataset.refreshEvent;
     const allowDelete = list.dataset.allowDelete === "true";
-    console.log("content:" + content + " refresh event:" + refreshEvent + " allow delete:" + allowDelete)
-    if (!content) return;
+    if (!content || !itemClass || !messageClass || !deleteButtonClass) return;
 
     const renderCounties = (counties: County[]) => {
       content.replaceChildren();
 
       if (counties.length === 0) {
         const emptyMessage = document.createElement("p");
-        emptyMessage.className = "countiesListMessage";
+        emptyMessage.className = messageClass;
         emptyMessage.textContent = "0 counties found";
         content.append(emptyMessage);
         return;
@@ -54,7 +65,7 @@ const {
 
       counties.forEach((county) => {
         const countyItem = document.createElement("div");
-        countyItem.className = "countiesListItem";
+        countyItem.className = itemClass;
 
         const countyLabel = document.createElement("span");
         countyLabel.textContent = `${county.name} (${county.schoolCount} ${county.schoolCount === 1 ? "School" : "Schools"})`;
@@ -63,7 +74,7 @@ const {
 
         if (allowDelete) {
           const deleteButton = document.createElement("button");
-          deleteButton.className = "deleteCountyButton";
+          deleteButton.className = deleteButtonClass;
           deleteButton.type = "button";
           deleteButton.setAttribute(
             "aria-label",
@@ -111,7 +122,7 @@ const {
       } catch {
         content.replaceChildren();
         const errorMessage = document.createElement("p");
-        errorMessage.className = "countiesListMessage";
+        errorMessage.className = messageClass;
         errorMessage.textContent = "Unable to load counties. Please try again.";
         content.append(errorMessage);
       } finally {
@@ -123,7 +134,6 @@ const {
       document.addEventListener(refreshEvent, fetchCounties);
     }
 
-    console.log("FETCHING THE COUNTIES")
     fetchCounties();
   });
 </script>

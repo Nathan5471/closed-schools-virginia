@@ -17,7 +17,6 @@
 .countiesPanel {
   display: flex;
   flex-direction: column;
-  background-color: #404e3b;
   border: 2px solid #bac8b1;
   overflow: hidden;
 }
