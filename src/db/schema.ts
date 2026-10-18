@@ -1,4 +1,4 @@
-import { integer, pgTable, varchar, pgEnum } from "drizzle-orm/pg-core";
+import { bigint, integer, pgTable, varchar, pgEnum } from "drizzle-orm/pg-core";
 import { defineRelations } from "drizzle-orm";
 
 export const usersTable = pgTable("users", {
@@ -67,7 +67,7 @@ export const submissionsTable = pgTable("submissions", {
   attachmentedURLs: varchar({ length: 255 }).array(),
   submittedBy: varchar({ length: 255 }).notNull(),
   submitterEmail: varchar({ length: 255 }).notNull(),
-  submittedAt: integer().notNull(),
+  submittedAt: bigint({ mode: "number" }).notNull(),
   submissionStatus: submissionStatusEnum().notNull().default("pending"),
 });
 
