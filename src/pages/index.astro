@@ -2,6 +2,7 @@
 import Layout from "../layouts/layout.astro";
 import NavBar from "../components/navbar.astro";
 import styles from "./index.module.css";
+import CountiesList from "../components/countiesList.astro"
 ---
 
 <Layout>
@@ -16,6 +17,9 @@ import styles from "./index.module.css";
         extra information about a school, please use the form in the NavBar to
         report it.
       </h3>
+    </div>
+    <div class="listdiv">
+      <CountiesList width="33%"/>
     </div>
   </div>
 </Layout>
