@@ -22,27 +22,20 @@ if (!submission) {
 }
 
 const submittedDate = new Date(submission.submittedAt).toLocaleDateString();
+const submissionStatus =
+  submission.submissionStatus === "approved"
+    ? "Accepted"
+    : submission.submissionStatus === "rejected"
+      ? "Rejected"
+      : "Pending review";
 ---
 
 <Layout>
   <AdminNavBar />
 
-  <main class={styles.page}>
-    <a class={styles.backLink} href="/admin/submissions"
-      >&larr; Back to submissions</a
-    >
+  <main class={`${styles.page} ${styles.detailPage}`}>
     <article class={styles.detailCard}>
-      <p class={styles.eyebrow}>Submission details</p>
-      <h1>{submission.schoolName}</h1>
-      <p class={styles.detailStatus} data-status={submission.submissionStatus}>
-        {
-          submission.submissionStatus === "approved"
-            ? "Accepted"
-            : submission.submissionStatus === "rejected"
-              ? "Rejected"
-              : "Pending review"
-        }
-      </p>
+      <h1>{submission.schoolName} ({submissionStatus})</h1>
 
       <dl class={styles.detailGrid}>
         <div><dt>County</dt><dd>{submission.countyName}</dd></div>
@@ -89,6 +82,32 @@ const submittedDate = new Date(submission.submittedAt).toLocaleDateString();
             </section>
           )
       }
+
+      <div class={styles.reviewActions}>
+        <form method="POST" action="/api/updateSubmissionStatus">
+          <input type="hidden" name="submissionId" value={submission.id} />
+          <input type="hidden" name="status" value="approved" />
+          <button
+            class={`${styles.actionButton} ${styles.approveButton}`}
+            type="submit"
+          >
+            Approve
+          </button>
+        </form>
+        <form method="POST" action="/api/updateSubmissionStatus">
+          <input type="hidden" name="submissionId" value={submission.id} />
+          <input type="hidden" name="status" value="rejected" />
+          <button
+            class={`${styles.actionButton} ${styles.denyButton}`}
+            type="submit"
+          >
+            Deny
+          </button>
+        </form>
+        <a class={styles.backLink} href="/admin/submissions">
+          &larr; Back to submissions
+        </a>
+      </div>
     </article>
   </main>
 </Layout>
