@@ -5,8 +5,352 @@ import styles from "./submit.module.css";
 ---
 
 <Layout>
-  <div>
-    <NavBar />
-    <h1>Search</h1>
-  </div>
+  <NavBar />
+  <main class={styles.container}>
+    <form class={styles.formContainer} id="submission-form">
+      <h1>Submit information</h1>
+      <p class={styles.intro}>
+        Share what you know about a former school, everything helps!
+      </p>
+
+      <div class={styles.fieldGrid}>
+        <div class={styles.field}>
+          <label for="school-name">School name:</label>
+          <input type="text" id="school-name" name="schoolName" required />
+        </div>
+
+        <div class={styles.field}>
+          <label for="county-name">County:</label>
+          <input type="text" id="county-name" name="countyName" required />
+        </div>
+
+        <div class={styles.field}>
+          <label for="school-type">School type:</label>
+          <select id="school-type" name="schoolType">
+            <option value="">Unknown</option>
+            <option value="white">White</option>
+            <option value="colored">Colored</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class={styles.field}>
+          <label for="school-status">Status:</label>
+          <select id="school-status" name="schoolStatus">
+            <option value="">Unknown</option>
+            <option value="standing">Standing</option>
+            <option value="repurposed">Repurposed</option>
+            <option value="not standing">Not standing</option>
+          </select>
+        </div>
+
+        <div class={styles.field}>
+          <label for="closed-year">Closed year:</label>
+          <input type="number" id="closed-year" name="closedYear" min="0" />
+        </div>
+
+        <div class={styles.field}>
+          <label for="address">Address:</label>
+          <input type="text" id="address" name="address" />
+        </div>
+
+        <div class={`${styles.field} ${styles.fullWidth}`}>
+          <label for="additional-info">Additional information:</label>
+          <textarea id="additional-info" name="additionalInfo" rows="5"
+          ></textarea>
+        </div>
+
+        <div class={styles.field}>
+          <label for="submitted-by">Your name:</label>
+          <input type="text" id="submitted-by" name="submittedBy" required />
+        </div>
+
+        <div class={styles.field}>
+          <label for="submitter-email">Your email:</label>
+          <input
+            type="email"
+            id="submitter-email"
+            name="submitterEmail"
+            required
+          />
+        </div>
+      </div>
+
+      <fieldset class={styles.uploadSection}>
+        <legend>Supporting files</legend>
+        <p class={styles.helperText}>
+          Add photographs, documents, or other files that support your tip.
+          Files must be 15 MB or smaller.
+        </p>
+        <label class={styles.filePicker} for="attachments">
+          <span class={styles.filePickerTitle}>Choose files</span>
+          <span class={styles.filePickerHint}>Images, PDFs, and documents</span>
+          <input
+            type="file"
+            id="attachments"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.txt"
+          />
+        </label>
+        <ul class={styles.fileList} id="file-list" aria-live="polite"></ul>
+      </fieldset>
+
+      <button class={styles.submitButton} type="submit" id="submit-button">
+        Send submission
+      </button>
+      <p
+        class={styles.message}
+        id="submission-message"
+        role="alert"
+        aria-live="polite"
+      >
+      </p>
+    </form>
+  </main>
 </Layout>
+
+<script>
+  type UploadItem = {
+    id: number;
+    file: File;
+    progress: number;
+    status: "uploading" | "complete" | "error";
+    url?: string;
+    error?: string;
+    xhr?: XMLHttpRequest;
+  };
+
+  const form = document.getElementById("submission-form") as HTMLFormElement;
+  const fileInput = document.getElementById("attachments") as HTMLInputElement;
+  const fileList = document.getElementById("file-list") as HTMLUListElement;
+  const submitButton = document.getElementById(
+    "submit-button",
+  ) as HTMLButtonElement;
+  const message = document.getElementById(
+    "submission-message",
+  ) as HTMLParagraphElement;
+  const uploads: UploadItem[] = [];
+  let nextUploadId = 0;
+
+  const formatFileSize = (size: number) => {
+    if (size < 1024 * 1024) {
+      return `${Math.max(1, Math.round(size / 1024))} KB`;
+    }
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const renderUploads = () => {
+    fileList.replaceChildren();
+
+    uploads.forEach((upload) => {
+      const item = document.createElement("li");
+      item.className = "fileItem";
+
+      const details = document.createElement("div");
+      details.className = "fileDetails";
+
+      const name = document.createElement("span");
+      name.className = "fileName";
+      name.textContent = upload.file.name;
+      details.append(name);
+
+      const status = document.createElement("span");
+      status.className = "fileStatus";
+      status.textContent =
+        upload.status === "complete"
+          ? `Uploaded · ${formatFileSize(upload.file.size)}`
+          : upload.status === "error"
+            ? upload.error || "Upload failed"
+            : `Uploading · ${upload.progress}%`;
+      details.append(status);
+
+      if (upload.status === "uploading") {
+        const progress = document.createElement("progress");
+        progress.className = "progress";
+        progress.max = 100;
+        progress.value = upload.progress;
+        progress.setAttribute("aria-label", `Uploading ${upload.file.name}`);
+        details.append(progress);
+      }
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "removeButton";
+      removeButton.type = "button";
+      removeButton.setAttribute("aria-label", `Remove ${upload.file.name}`);
+      removeButton.textContent = "×";
+      removeButton.addEventListener("click", () => {
+        upload.xhr?.abort();
+        const index = uploads.indexOf(upload);
+        if (index !== -1) {
+          uploads.splice(index, 1);
+        }
+        renderUploads();
+      });
+
+      item.append(details, removeButton);
+      fileList.append(item);
+    });
+  };
+
+  const uploadFile = async (upload: UploadItem) => {
+    const logPrefix = `[upload ${upload.id}]`;
+    console.info(`${logPrefix} starting`, {
+      name: upload.file.name,
+      type: upload.file.type || "application/octet-stream",
+      size: upload.file.size,
+    });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        upload.xhr = xhr;
+        xhr.open("POST", "/api/uploadFile");
+        console.info(`${logPrefix} sending multipart request`);
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable) {
+            upload.progress = Math.round((event.loaded / event.total) * 100);
+            renderUploads();
+          }
+        });
+        xhr.addEventListener("load", () => {
+          console.info(`${logPrefix} response received`, {
+            status: xhr.status,
+            response: xhr.responseText.slice(0, 1000),
+          });
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const result = JSON.parse(xhr.responseText) as {
+                postUploadURL?: string;
+              };
+              if (!result.postUploadURL) {
+                reject(new Error("Upload completed without a file URL"));
+                return;
+              }
+              upload.url = result.postUploadURL;
+              upload.progress = 100;
+              upload.status = "complete";
+              resolve();
+            } catch {
+              reject(new Error("Upload returned an invalid response"));
+            }
+          } else {
+            try {
+              const result = JSON.parse(xhr.responseText) as {
+                message?: string;
+              };
+              reject(
+                new Error(result.message || "The file upload was rejected"),
+              );
+            } catch {
+              reject(new Error("The file upload was rejected"));
+            }
+          }
+        });
+        xhr.addEventListener("error", () => {
+          console.error(`${logPrefix} network error`, {
+            status: xhr.status,
+            statusText: xhr.statusText,
+          });
+          reject(new Error("Upload failed"));
+        });
+        xhr.addEventListener("abort", () =>
+          (() => {
+            console.warn(`${logPrefix} request aborted`);
+            reject(new Error("Upload canceled"));
+          })(),
+        );
+        const formData = new FormData();
+        formData.append("file", upload.file, upload.file.name);
+        xhr.send(formData);
+      });
+    } catch (error) {
+      upload.status = "error";
+      upload.error = error instanceof Error ? error.message : "Upload failed";
+      console.error(`${logPrefix} failed`, error);
+    } finally {
+      upload.xhr = undefined;
+      renderUploads();
+      console.info(`${logPrefix} finished`, { status: upload.status });
+    }
+  };
+
+  fileInput.addEventListener("change", () => {
+    const selectedFiles = Array.from(fileInput.files || []);
+    selectedFiles.forEach((file) => {
+      const upload: UploadItem = {
+        id: nextUploadId++,
+        file,
+        progress: 0,
+        status: "uploading",
+      };
+      uploads.push(upload);
+      console.info(`[upload ${upload.id}] selected`, {
+        name: file.name,
+        size: file.size,
+        type: file.type || "application/octet-stream",
+      });
+      renderUploads();
+      uploadFile(upload);
+    });
+    fileInput.value = "";
+  });
+
+  form.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    message.textContent = "";
+
+    if (uploads.some((upload) => upload.status === "uploading")) {
+      message.textContent = "Please wait for your files to finish uploading.";
+      return;
+    }
+
+    if (uploads.some((upload) => upload.status === "error")) {
+      message.textContent = "Remove failed files or try uploading them again.";
+      return;
+    }
+
+    submitButton.disabled = true;
+    const formData = new FormData(form);
+    const closedYear = formData.get("closedYear");
+    const data = {
+      schoolName: formData.get("schoolName"),
+      countyName: formData.get("countyName"),
+      schoolType: formData.get("schoolType") || null,
+      schoolStatus: formData.get("schoolStatus") || null,
+      closedYear: closedYear ? Number(closedYear) : null,
+      address: formData.get("address") || null,
+      additionalInfo: formData.get("additionalInfo") || null,
+      attachmentedURLs: uploads.flatMap((upload) =>
+        upload.url ? [upload.url] : [],
+      ),
+      submittedBy: formData.get("submittedBy"),
+      submitterEmail: formData.get("submitterEmail"),
+    };
+
+    try {
+      const response = await fetch("/api/submitInfo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to send submission");
+      }
+
+      form.reset();
+      uploads.splice(0);
+      renderUploads();
+      message.textContent =
+        "Thank you. Your information has been sent for review.";
+    } catch (error) {
+      message.textContent =
+        error instanceof Error
+          ? error.message
+          : "Unable to send submission right now.";
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+</script>

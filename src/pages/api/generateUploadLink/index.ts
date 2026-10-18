@@ -71,9 +71,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   const baseURL = process.env.R2_BASE_URL;
+  const bucketName = process.env.R2_BUCKET_NAME;
   const publicBaseURL = process.env.R2_PUBLIC_BASE_URL;
 
-  if (!accessKeyId || !secretAccessKey || !baseURL || !publicBaseURL) {
+  if (
+    !accessKeyId ||
+    !secretAccessKey ||
+    !baseURL ||
+    !bucketName ||
+    !publicBaseURL
+  ) {
     console.error("R2 credentials are not set in environment variables");
     return jsonResponse({ message: "Failed to generate upload link" }, 500);
   }
@@ -87,7 +94,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       accessKeyId,
       secretAccessKey,
     });
-    const url = new URL(`${baseURL.replace(/\/$/, "")}/${filename}`);
+    const url = new URL(
+      `${baseURL.replace(/\/$/, "")}/${encodeURIComponent(bucketName)}/${filename}`,
+    );
     url.searchParams.set("X-Amz-Expires", "3600");
     const signed = await r2.sign(new Request(url, { method: "PUT" }), {
       aws: { signQuery: true },
