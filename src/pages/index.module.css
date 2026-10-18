@@ -17,3 +17,9 @@
 .list {
   flex: 1;
 }
+
+.countyArea {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

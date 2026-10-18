@@ -1,7 +1,9 @@
 ---
+import { desc, lt } from "drizzle-orm";
 import AdminNavBar from "../../components/adminnavbar.astro";
 import Layout from "../../layouts/layout.astro";
 import { db } from "../../db";
+import { invitationsTable } from "../../db/schema";
 import styles from "./index.module.css";
 
 const schools = await db.query.schoolsTable.findMany({
@@ -21,46 +23,92 @@ const schools = await db.query.schoolsTable.findMany({
     },
   },
 });
+
+await db
+  .delete(invitationsTable)
+  .where(lt(invitationsTable.expiresAt, Date.now()))
+  .execute();
+
+const invitations = await db
+  .select({
+    id: invitationsTable.id,
+    token: invitationsTable.token,
+    createdAt: invitationsTable.createdAt,
+    expiresAt: invitationsTable.expiresAt,
+    usedAt: invitationsTable.usedAt,
+  })
+  .from(invitationsTable)
+  .orderBy(desc(invitationsTable.createdAt))
+  .execute();
 ---
 
 <Layout>
   <AdminNavBar />
 
-  <main class={styles.page} data-schools={JSON.stringify(schools)}>
-    <section class={styles.panel}>
-      <div class={styles.controls}>
-        <label class={styles.searchField} for="school-search">
-          Search schools
-          <input id="school-search" type="search" />
-        </label>
+  <main
+    class={styles.page}
+    data-schools={JSON.stringify(schools)}
+    data-invitations={JSON.stringify(invitations)}
+  >
+    <div class={styles.dashboardGrid}>
+      <section class={styles.panel}>
+        <div class={styles.controls}>
+          <label class={styles.searchField} for="school-search">
+            Search schools
+            <input id="school-search" type="search" />
+          </label>
 
-        <label for="sort-field">
-          Sort by
-          <select id="sort-field">
-            <option value="name">School name</option>
-            <option value="county">County</option>
-          </select>
-        </label>
+          <label for="sort-field">
+            Sort by
+            <select id="sort-field">
+              <option value="name">School name</option>
+              <option value="county">County</option>
+            </select>
+          </label>
 
-        <label for="sort-order">
-          Order
-          <select id="sort-order">
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </label>
-      </div>
+          <label for="sort-order">
+            Order
+            <select id="sort-order">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+        </div>
 
-      <div class={styles.resultsHeading}>
-        <h2>Schools</h2>
-        <span id="school-count">0 schools</span>
-      </div>
+        <div class={styles.resultsHeading}>
+          <h2>Schools</h2>
+          <span id="school-count">0 schools</span>
+        </div>
 
-      <div class={styles.schoolList} id="school-list" aria-live="polite"></div>
-      <p class={styles.emptyState} id="empty-state" hidden>
-        No schools match your search.
-      </p>
-    </section>
+        <div class={styles.schoolList} id="school-list" aria-live="polite">
+        </div>
+        <p class={styles.emptyState} id="empty-state" hidden>
+          No schools match your search.
+        </p>
+      </section>
+
+      <section class={`${styles.panel} ${styles.invitationPanel}`}>
+        <header class={styles.invitationHeader}>
+          <h2>Invite Admin</h2>
+        </header>
+        <form id="invitation-form" class={styles.invitationForm}>
+          <label for="invitation-expiration">
+            Expires in days
+            <input
+              id="invitation-expiration"
+              type="number"
+              min="1"
+              max="365"
+              value="7"
+              required
+            />
+          </label>
+          <button type="submit">Create invitation</button>
+          <p id="invitation-message" role="status"></p>
+        </form>
+        <div class={styles.invitationList} id="invitation-list"></div>
+      </section>
+    </div>
   </main>
 
   <template id="school-template">
@@ -150,4 +198,109 @@ const schools = await db.query.schoolsTable.findMany({
   sortField.addEventListener("change", renderSchools);
   sortOrder.addEventListener("change", renderSchools);
   renderSchools();
+</script>
+
+<script>
+  type Invitation = {
+    id: number;
+    token: string;
+    createdAt: number;
+    expiresAt: number;
+    usedAt: number | null;
+  };
+
+  const dashboard = document.querySelector<HTMLElement>("[data-invitations]");
+  const invitationList = document.getElementById("invitation-list");
+  const invitationForm = document.getElementById(
+    "invitation-form",
+  ) as HTMLFormElement;
+  const expirationInput = document.getElementById(
+    "invitation-expiration",
+  ) as HTMLInputElement;
+  const invitationMessage = document.getElementById(
+    "invitation-message",
+  ) as HTMLParagraphElement;
+  let invitations = JSON.parse(
+    dashboard?.dataset.invitations || "[]",
+  ) as Invitation[];
+
+  const invitationStatus = (invitation: Invitation) => {
+    if (invitation.usedAt) return "Used";
+    if (invitation.expiresAt <= Date.now()) return "Expired";
+    return "Active";
+  };
+
+  const renderInvitations = () => {
+    if (!invitationList) return;
+    invitationList.replaceChildren();
+    if (invitations.length === 0) {
+      const empty = document.createElement("p");
+      empty.textContent = "No invitations yet.";
+      invitationList.append(empty);
+      return;
+    }
+
+    invitations.forEach((invitation) => {
+      const item = document.createElement("article");
+      item.className = "invitationItem";
+      const link = `${window.location.origin}/admin/signup/${invitation.token}`;
+      const status = document.createElement("strong");
+      status.textContent = invitationStatus(invitation);
+      const url = document.createElement("a");
+      url.href = link;
+      url.textContent = link;
+      url.target = "_blank";
+      url.rel = "noreferrer";
+      const meta = document.createElement("small");
+      meta.textContent = `Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`;
+      const actions = document.createElement("div");
+      actions.className = "invitationActions";
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.textContent = "Copy link";
+      copy.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(link);
+        copy.textContent = "Copied";
+      });
+      const revoke = document.createElement("button");
+      revoke.type = "button";
+      revoke.textContent = "Revoke";
+      revoke.disabled = invitationStatus(invitation) !== "Active";
+      revoke.addEventListener("click", async () => {
+        const response = await fetch("/api/invitations", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: invitation.id }),
+        });
+        if (response.ok) {
+          invitations = invitations.filter((item) => item.id !== invitation.id);
+          renderInvitations();
+        }
+      });
+      actions.append(copy, revoke);
+      item.append(status, url, meta, actions);
+      invitationList.append(item);
+    });
+  };
+
+  invitationForm.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    invitationMessage.textContent = "Creating...";
+    const response = await fetch("/api/invitations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresInDays: Number(expirationInput.value) }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      invitationMessage.textContent =
+        result.message || "Unable to create invitation";
+      return;
+    }
+    invitations = [result.invitation, ...invitations];
+    invitationMessage.textContent = "Invitation created.";
+    renderInvitations();
+  });
+
+  renderInvitations();
 </script>

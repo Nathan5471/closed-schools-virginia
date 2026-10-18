@@ -5,7 +5,10 @@ import { db } from "./db";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 
-const publicAdminRoutes = new Set(["/admin/login", "/admin/signup"]);
+const isPublicAdminRoute = (path: string) =>
+  path === "/admin/login" ||
+  path === "/admin/signup" ||
+  path.startsWith("/admin/signup/");
 
 export const onRequest: MiddlewareHandler = async (
   { cookies, url, locals, redirect },
@@ -15,7 +18,7 @@ export const onRequest: MiddlewareHandler = async (
   const isAdminRoute =
     normalizedPath === "/admin" || normalizedPath.startsWith("/admin/");
 
-  if (!isAdminRoute || publicAdminRoutes.has(normalizedPath)) {
+  if (!isAdminRoute || isPublicAdminRoute(normalizedPath)) {
     return next();
   }
 

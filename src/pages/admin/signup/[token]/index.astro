@@ -1,0 +1,83 @@
+---
+import { and, eq, gt, isNull } from "drizzle-orm";
+import Layout from "../../../../layouts/layout.astro";
+import { db } from "../../../../db";
+import { invitationsTable } from "../../../../db/schema";
+import styles from "../signup.module.css";
+
+// @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+const inviteToken = Astro.params.token ?? "";
+const [invitation] = await db
+  .select({ id: invitationsTable.id })
+  .from(invitationsTable)
+  .where(
+    and(
+      eq(invitationsTable.token, inviteToken),
+      isNull(invitationsTable.usedAt),
+      gt(invitationsTable.expiresAt, Date.now()),
+    ),
+  )
+  .execute();
+
+if (!invitation) {
+  // @ts-expect-error The editor's TypeScript service incorrectly treats Astro as a namespace here.
+  return Astro.redirect("/admin/login", 302);
+}
+---
+
+<Layout>
+  <div class={styles.container}>
+    <form
+      class={styles.formContainer}
+      id="invite-signup-form"
+      data-invite-token={inviteToken}
+    >
+      <h1>Create Admin Account</h1>
+      <p class={styles.accountPrompt}>This invitation can only be used once.</p>
+      <label for="username">Username:</label>
+      <input type="text" id="username" required />
+      <label for="password">Password:</label>
+      <input type="password" id="password" required />
+      <button type="submit">Create account</button>
+      <p
+        class={styles.message}
+        id="signup-message"
+        role="alert"
+        aria-live="polite"
+      >
+      </p>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById("invite-signup-form") as HTMLFormElement;
+  const message = document.getElementById(
+    "signup-message",
+  ) as HTMLParagraphElement;
+  const inviteToken = form.dataset.inviteToken;
+
+  form.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    message.textContent = "";
+    const username = (document.getElementById("username") as HTMLInputElement)
+      .value;
+    const password = (document.getElementById("password") as HTMLInputElement)
+      .value;
+
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, inviteToken }),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.message || "Unable to create account");
+      window.location.assign("/admin");
+    } catch (error) {
+      message.textContent =
+        error instanceof Error ? error.message : "Unable to create account";
+    }
+  });
+</script>

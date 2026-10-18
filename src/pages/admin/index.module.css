@@ -7,12 +7,137 @@
   color: #edf4e7;
 }
 
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+  gap: 16px;
+  width: min(1280px, 100%);
+  align-items: start;
+}
+
 .panel {
   box-sizing: border-box;
   width: min(980px, 100%);
   padding: 28px 24px 24px;
   border-radius: 12px;
   background-color: #404e3b;
+}
+
+.dashboardGrid .panel {
+  width: 100%;
+}
+
+.invitationPanel {
+  min-width: 0;
+}
+
+.invitationHeader h2 {
+  margin: 0;
+  color: #edf4e7;
+  font-size: 1.5rem;
+}
+
+.invitationHeader p:last-child {
+  margin: 8px 0 0;
+  color: #dfead9;
+  line-height: 1.45;
+}
+
+.invitationForm {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.invitationForm label {
+  display: grid;
+  gap: 5px;
+  color: #dfead9;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.invitationForm input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: #7b9669;
+  color: #253025;
+  font: inherit;
+}
+
+.invitationForm button,
+:global(.invitationActions) button {
+  padding: 10px;
+  border: 0;
+  border-radius: 4px;
+  background: #7b9669;
+  color: #253025;
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.invitationForm button:hover,
+:global(.invitationActions) button:hover {
+  background: #bac8b1;
+}
+
+.invitationForm p {
+  min-height: 1.3em;
+  margin: 0;
+  color: #dfead9;
+}
+
+.invitationList {
+  display: grid;
+  gap: 10px;
+}
+
+:global(.invitationItem) {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  background: #7b9669;
+  color: #253025;
+}
+
+:global(.invitationItem) strong {
+  color: #253025;
+}
+
+:global(.invitationItem) a {
+  overflow-wrap: anywhere;
+  color: #354332;
+  font-size: 0.8rem;
+}
+
+:global(.invitationItem) small {
+  color: #354332;
+}
+
+:global(.invitationActions) {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+:global(.invitationActions) button:last-child {
+  background: #c80815;
+  color: #ffffff;
+}
+
+:global(.invitationActions) button:last-child:hover {
+  background: #a60611;
+}
+
+:global(.invitationActions) button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .header {
@@ -180,6 +305,10 @@
 
   .searchField {
     grid-column: 1 / -1;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
   }
 }
 

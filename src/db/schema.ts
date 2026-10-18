@@ -15,6 +15,20 @@ export const usersTable = pgTable("users", {
   password: varchar({ length: 255 }).notNull(),
 });
 
+export const invitationsTable = pgTable("invitations", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  token: varchar({ length: 128 }).notNull().unique(),
+  createdBy: integer()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  createdAt: bigint({ mode: "number" })
+    .notNull()
+    .default(sql`(extract(epoch from now()) * 1000)::bigint`),
+  expiresAt: bigint({ mode: "number" }).notNull(),
+  usedAt: bigint({ mode: "number" }),
+  usedBy: integer().references(() => usersTable.id, { onDelete: "set null" }),
+});
+
 export const countiesTable = pgTable("counties", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar({ length: 255 }).notNull().unique(),
