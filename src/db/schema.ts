@@ -28,7 +28,7 @@ export const imagesTable = pgTable("images", {
 
 export const schoolTypesEnum = pgEnum("schoolType", [
   "white",
-  "black",
+  "colored",
   "mixed",
 ]);
 export const statusEnum = pgEnum("status", [

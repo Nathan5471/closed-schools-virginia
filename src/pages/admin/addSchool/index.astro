@@ -1,0 +1,120 @@
+---
+import AdminNavBar from "../../../components/adminnavbar.astro";
+import Layout from "../../../layouts/layout.astro";
+import styles from "./addSchool.module.css";
+---
+
+<Layout>
+  <AdminNavBar />
+  <main class={styles.container}>
+    <form class={styles.formContainer} id="add-school-form">
+      <h1>Add School</h1>
+
+      <label for="school-name">School name:</label>
+      <input type="text" id="school-name" name="name" required />
+
+      <label for="county">County:</label>
+      <select id="county" name="countyId" required>
+        <option value="">Loading counties...</option>
+      </select>
+
+      <label for="school-type">School type:</label>
+      <select id="school-type" name="type">
+        <option value="">Unknown</option>
+        <option value="white">White</option>
+        <option value="colored">Colored</option>
+        <option value="mixed">Mixed</option>
+      </select>
+
+      <label for="status">Status:</label>
+      <select id="status" name="status">
+        <option value="">Unknown</option>
+        <option value="standing">Standing</option>
+        <option value="repurposed">Repurposed</option>
+        <option value="not standing">Not standing</option>
+      </select>
+
+      <label for="closed-year">Closed year:</label>
+      <input type="number" id="closed-year" name="closedYear" />
+
+      <label for="address">Address:</label>
+      <input type="text" id="address" name="address" />
+
+      <button type="submit">Add School</button>
+      <p
+        class={styles.message}
+        id="add-school-message"
+        role="alert"
+        aria-live="polite"
+      >
+      </p>
+    </form>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById("add-school-form") as HTMLFormElement;
+  const countySelect = document.getElementById("county") as HTMLSelectElement;
+  const message = document.getElementById(
+    "add-school-message",
+  ) as HTMLParagraphElement;
+
+  const loadCounties = async () => {
+    try {
+      const response = await fetch("/api/getCounties");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to load counties.");
+      }
+
+      countySelect.replaceChildren(new Option("Select a county", ""));
+      result.cleanedCounties.forEach((county: { id: number; name: string }) => {
+        countySelect.add(new Option(county.name, String(county.id)));
+      });
+    } catch {
+      countySelect.replaceChildren(new Option("Unable to load counties", ""));
+      message.textContent =
+        "Unable to load counties. Please refresh and try again.";
+    }
+  };
+
+  loadCounties();
+
+  form?.addEventListener("submit", async (event: SubmitEvent) => {
+    event.preventDefault();
+    message.textContent = "";
+
+    const formData = new FormData(form);
+    const closedYear = formData.get("closedYear");
+    const data = {
+      name: formData.get("name"),
+      countyId: Number(formData.get("countyId")),
+      type: formData.get("type") || null,
+      status: formData.get("status") || null,
+      closedYear: closedYear ? Number(closedYear) : null,
+      address: formData.get("address") || null,
+    };
+
+    try {
+      const response = await fetch("/api/addSchool", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        message.textContent =
+          result.message || "Unable to add school. Please try again.";
+        return;
+      }
+
+      window.location.assign("/admin");
+    } catch {
+      message.textContent = "Unable to add school right now. Please try again.";
+    }
+  });
+</script>
