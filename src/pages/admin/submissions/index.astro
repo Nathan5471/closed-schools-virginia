@@ -8,43 +8,33 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
   <AdminNavBar />
 
   <main class={styles.page}>
-    <header class={styles.header}>
-      <p class={styles.eyebrow}>Organizer review</p>
-      <h1>Submission inbox</h1>
-      <p class={styles.intro}>
-        Review new school submissions and keep track of decisions already made.
+    <div class={styles.panel}>
+      <section class={styles.section} aria-labelledby="unreviewed-heading">
+        <div class={styles.sectionHeading}>
+          <h2 id="unreviewed-heading">
+            Unreviewed Submissions (<span class={styles.count} data-count="unreviewed">0</span>)
+          </h2>
+        </div>
+        <div class={styles.submissionList} data-list="unreviewed">
+          <p class={styles.message}>Loading Submissions...</p>
+        </div>
+      </section>
+
+      <section class={styles.section} aria-labelledby="reviewed-heading">
+        <div class={styles.sectionHeading}>
+          <h2 id="reviewed-heading">
+            Reviewed Submissions (<span class={styles.count} data-count="reviewed">0</span>)
+          </h2>
+        </div>
+        <div class={styles.submissionList} data-list="reviewed">
+          <p class={styles.message}>Loading Submissions...</p>
+        </div>
+      </section>
+
+      <p class={`${styles.message} ${styles.error}`} data-error hidden>
+        Error - Try Again
       </p>
-    </header>
-
-    <section class={styles.section} aria-labelledby="unreviewed-heading">
-      <div class={styles.sectionHeading}>
-        <div>
-          <p class={styles.sectionLabel}>Needs attention</p>
-          <h2 id="unreviewed-heading">Unreviewed submissions</h2>
-        </div>
-        <span class={styles.count} data-count="unreviewed">0</span>
-      </div>
-      <div class={styles.submissionList} data-list="unreviewed">
-        <p class={styles.message}>Loading submissions...</p>
-      </div>
-    </section>
-
-    <section class={styles.section} aria-labelledby="reviewed-heading">
-      <div class={styles.sectionHeading}>
-        <div>
-          <p class={styles.sectionLabel}>Decision history</p>
-          <h2 id="reviewed-heading">Reviewed submissions</h2>
-        </div>
-        <span class={styles.count} data-count="reviewed">0</span>
-      </div>
-      <div class={styles.submissionList} data-list="reviewed">
-        <p class={styles.message}>Reviewed submissions will appear here.</p>
-      </div>
-    </section>
-
-    <p class={`${styles.message} ${styles.error}`} data-error hidden>
-      We could not load submissions. Please refresh and try again.
-    </p>
+    </div>
   </main>
 
   <template id="submission-template">
@@ -55,7 +45,7 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
         <p class={styles.status} data-status hidden></p>
       </div>
       <a class={styles.viewLink} data-view-link
-        >View submission <span aria-hidden="true">&rarr;</span></a
+        >View Submission <span aria-hidden="true">&rarr;</span></a
       >
     </article>
   </template>
@@ -123,8 +113,8 @@ import AdminNavBar from "../../../components/adminnavbar.astro";
       const emptyMessage = document.createElement("p");
       emptyMessage.className = "submission-empty";
       emptyMessage.textContent = reviewed
-        ? "No reviewed submissions yet."
-        : "There are no submissions waiting for review.";
+        ? "No Reviewed Submissions"
+        : "No Unreviewed Submissions";
       list.append(emptyMessage);
       return;
     }
