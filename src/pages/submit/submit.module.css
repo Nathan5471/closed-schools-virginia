@@ -112,30 +112,22 @@ button:focus-visible,
   justify-content: center;
   min-height: 64px;
   padding: 8px 12px;
-  border: 1px solid #91aa84;
   border-radius: 5px;
-  color: #e4eee0;
+  color: #354332;
   cursor: pointer;
   text-align: center;
+  background-color: #7b9669;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+    background-color 0.5s ease,
 }
 
 .filePicker:hover {
-  background-color: #4d6047;
-  border-color: #bac8b1;
+  background-color: #bac8b1;
 }
 
 .filePickerTitle {
   font-size: 16px;
   font-weight: 700;
-}
-
-.filePickerHint {
-  margin-top: 2px;
-  color: #d1ddcc;
-  font-size: 12px;
 }
 
 .filePicker input {
@@ -148,8 +140,8 @@ button:focus-visible,
 }
 
 .fileList {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 14px 0 0;
   padding: 0;
@@ -162,8 +154,7 @@ button:focus-visible,
   gap: 12px;
   min-width: 0;
   padding: 9px 0;
-  background-color: #354332;
-  border-bottom: 1px solid #667d5b;
+  background-color: #253025;
   border-radius: 4px;
 }
 
@@ -173,6 +164,7 @@ button:focus-visible,
   flex-direction: column;
   min-width: 0;
   gap: 4px;
+  margin-left: 5px;
 }
 
 :global(.fileName) {
@@ -261,6 +253,10 @@ button:focus-visible,
 
   .uploadSection {
     padding: 14px;
+  }
+
+  .fileList {
+    grid-template-columns: 1fr;
   }
 }
 
