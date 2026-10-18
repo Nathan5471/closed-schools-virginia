@@ -10,6 +10,10 @@ Admin accounts can invite other admin accounts, manage the counties, manage the 
 
 This website was made using Astro and we are using Drizzle and PostgreSQL as our database.
 
+## AI Deceleration
+
+GitHub Copilot was used throughout this project.
+
 ## Screenshots
 
 <img width="2879" height="1565" alt="image" src="https://github.com/user-attachments/assets/a58c9df0-ad11-43f8-be71-e4ab8a98b176" />
