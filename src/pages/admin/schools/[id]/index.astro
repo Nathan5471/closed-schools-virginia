@@ -276,19 +276,19 @@ const descriptionHtml = school.description
                 </div>
               </div>
               <div class={styles.referenceChoice}>
-                <label for="source-image-input">
-                  Upload source image
-                  <span>The uploaded image URL will be added as a source.</span>
+                <label for="uploaded-source">
+                  Upload source
+                  <span>The uploaded source URL will be added as a source.</span>
                 </label>
                 <input
-                  id="source-image-name"
+                  id="uploaded-source"
                   type="text"
-                  placeholder="Source image name"
+                  placeholder="Uploaded source name"
                 />
-                <input id="source-image-input" type="file" accept="image/*" />
+                <input id="uploaded-source-file" type="file" accept="*" />
                 <p
                   class={styles.formMessage}
-                  id="source-image-message"
+                  id="uploaded-source-message"
                   role="status"
                 >
                 </p>
@@ -331,14 +331,14 @@ const descriptionHtml = school.description
   const sourceLinkInput = document.getElementById(
     "source-link-input",
   ) as HTMLInputElement;
-  const sourceImageInput = document.getElementById(
-    "source-image-input",
+  const uploadedSourceInput = document.getElementById(
+    "uploaded-source",
   ) as HTMLInputElement;
-  const sourceImageNameInput = document.getElementById(
-    "source-image-name",
+  const uploadedSourceFileInput = document.getElementById(
+    "uploaded-source-file",
   ) as HTMLInputElement;
-  const sourceImageMessage = document.getElementById(
-    "source-image-message",
+  const uploadedSourceMessage = document.getElementById(
+    "uploaded-source-message",
   ) as HTMLParagraphElement;
   const sourceLinkList = document.getElementById(
     "source-link-list",
@@ -380,20 +380,20 @@ const descriptionHtml = school.description
     renderSourceLinks();
   });
 
-  sourceImageInput.addEventListener("change", async () => {
-    const file = sourceImageInput.files?.[0];
+  uploadedSourceFileInput.addEventListener("change", async () => {
+    const file = uploadedSourceFileInput.files?.[0];
     if (!file) return;
-    const sourceImageName = sourceImageNameInput.value.trim();
-    if (!sourceImageName) {
-      sourceImageMessage.textContent =
-        "Enter a source image name before uploading.";
-      sourceImageInput.value = "";
+    const uploadedSourceName = uploadedSourceInput.value.trim();
+    if (!uploadedSourceName) {
+      uploadedSourceMessage.textContent =
+        "Enter an uploaded source name before uploading.";
+      uploadedSourceFileInput.value = "";
       return;
     }
 
-    sourceImageMessage.textContent = `Uploading ${file.name}...`;
+    uploadedSourceMessage.textContent = `Uploading ${file.name}...`;
     const formData = new FormData();
-    formData.append("name", sourceImageName);
+    formData.append("name", uploadedSourceName);
     formData.append("file", file, file.name);
     try {
       const response = await fetch("/api/uploadFile", {
@@ -411,15 +411,15 @@ const descriptionHtml = school.description
         sourceLinks.push(result.postUploadURL);
         renderSourceLinks();
       }
-      sourceImageMessage.textContent = "Source image added.";
+      uploadedSourceMessage.textContent = "Source image added.";
     } catch (error) {
-      sourceImageMessage.textContent =
+      uploadedSourceMessage.textContent =
         error instanceof Error
           ? error.message
           : "Unable to upload source image";
     } finally {
-      sourceImageInput.value = "";
-      sourceImageNameInput.value = "";
+      uploadedSourceFileInput.value = "";
+      uploadedSourceInput.value = "";
     }
   });
 
